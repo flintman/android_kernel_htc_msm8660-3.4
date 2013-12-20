@@ -16,7 +16,7 @@
 #ifndef __ASM_ARCH_MSM_SERIAL_HS_H
 #define __ASM_ARCH_MSM_SERIAL_HS_H
 
-#include<linux/serial_core.h>
+#include <linux/serial_core.h>
 
 /**
  * struct msm_serial_hs_platform_data - platform device data
@@ -48,12 +48,19 @@ struct msm_serial_hs_platform_data {
 	int userid;
 	int uartdm_rx_buf_size;
 #endif
-#ifdef CONFIG_SERIAL_MSM_HS_BRCM
+#if defined (CONFIG_SERIAL_MSM_HS_BRCM) || defined (CONFIG_SERIAL_MSM_HS_TI_DC)
 	int (*gpio_config)(int);
 	unsigned char bt_wakeup_pin;
 	unsigned char host_wakeup_pin;
 #endif
 };
+
+#ifdef CONFIG_SERIAL_MSM_HS_TI_DC
+extern void ti_msm_hs_request_clock_off(struct uart_port *uport);
+extern void ti_msm_hs_request_clock_on(struct uart_port *uport);
+extern void ti_dc_msm_hs_request_clock_off(struct uart_port *uport);
+extern void ti_dc_msm_hs_request_clock_on(struct uart_port *uport);
+#endif
 
 #ifdef CONFIG_SERIAL_MSM_HS_BRCM
 extern void imc_msm_hs_request_clock_on(struct uart_port *uport);
