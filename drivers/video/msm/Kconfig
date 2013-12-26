@@ -15,6 +15,10 @@ config FB_MSM
 
 if FB_MSM
 
+config NEW_MSM_KGSL
+       bool "Use new KGSL (flo)"
+       default n
+
 config FB_MSM_BACKLIGHT
 	bool "Support for backlight control"
 	default y
