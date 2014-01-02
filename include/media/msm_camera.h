@@ -1540,7 +1540,7 @@ struct msm_actuator_get_ois_cal_info_t {
 	int8_t cal_method;
 	int8_t cal_current_point;
 	int8_t cal_max_point;
-#if CONFIG_MSM_CAMERA_HTC_HAL_VERSION > 1
+#if defined(CONFIG_MSM_CAMERA_HTC_HAL_VERSION) && (CONFIG_MSM_CAMERA_HTC_HAL_VERSION > 1)
 	int8_t bypass_ois_cal;
 #endif
 };
@@ -1606,7 +1606,7 @@ struct msm_actuator_cfg_data {
 	uint8_t is_af_supported;
 	uint8_t is_ois_supported;
         uint8_t is_cal_supported;
-#if CONFIG_MSM_CAMERA_HTC_HAL_VERSION >= 3
+#if defined(CONFIG_MSM_CAMERA_HTC_HAL_VERSION) && (CONFIG_MSM_CAMERA_HTC_HAL_VERSION >= 3)
 	int8_t enable_focus_step_log;
 	uint8_t small_step_damping;
 	uint8_t medium_step_damping;
