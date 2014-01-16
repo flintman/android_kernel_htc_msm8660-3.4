@@ -186,14 +186,10 @@ static struct msm_panel_common_pdata mdp_pdata = {
 #endif
 	.mdp_rev = MDP_REV_41,
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-	.mem_hid = BIT(ION_CP_MM_HEAP_ID),
+	.mem_hid = BIT(ION_CP_WB_HEAP_ID),
 #else
 	.mem_hid = MEMTYPE_EBI1,
 #endif
-        //	.cont_splash_enabled = 0x01,
-	.cont_splash_enabled = 0x00,
-        //        //	.splash_screen_addr = 0x00,
-        //	.splash_screen_size = 4096000,//0x00,
 	.mdp_iommu_split_domain = 0,
 };
 
