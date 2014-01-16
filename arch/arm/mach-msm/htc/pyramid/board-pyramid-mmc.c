@@ -229,7 +229,7 @@ int pyramid_wifi_reset(int on)
 	return 0;
 }
 
-int __init pyramid_init_mmc()
+int __init pyramid_init_wifi_mmc(void)
 {
 	uint32_t id;
 	wifi_status_cb = NULL;
