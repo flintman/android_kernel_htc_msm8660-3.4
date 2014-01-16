@@ -1664,6 +1664,8 @@ static int mipi_pyramid_lcd_on(struct platform_device *pdev)
 
         mipi_pyramid_send_cmd(mipi_power_on_cmd, mipi_power_on_cmd_size, false);
 
+	mipi_lcd_on = 1;
+
         printk(KERN_ERR "%s: --\n", __func__);
 	return 0;
 }
