@@ -135,7 +135,7 @@ static char led_pwm1[] =
 	0x51, 0x0,
 };
 
-static unsigned char bkl_enable_cmds[] = {0x53, 0x24};/* DTYPE_DCS_WRITE1 */ /* bkl on and no dim */
+static char bkl_enable_cmds[] = {0x53, 0x24};/* DTYPE_DCS_WRITE1 */ /* bkl on and no dim */
 
 static char sw_reset[2] = {0x01, 0x00}; /* DTYPE_DCS_WRITE */
 static char enter_sleep[2] = {0x10, 0x00}; /* DTYPE_DCS_WRITE */
@@ -192,6 +192,7 @@ static struct dsi_cmd_desc novatek_wvga_c3_cmd_on_cmds[] = {
 		sizeof(novatek_ce), novatek_ce},
 	{DTYPE_DCS_WRITE, 1, 0, 0, 120,
 		sizeof(exit_sleep), exit_sleep},
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(enable_te), enable_te},
 	{DTYPE_DCS_LWRITE, 1, 0, 0, 0,
@@ -266,6 +267,7 @@ static struct dsi_cmd_desc novatek_wvga_cmd_on_cmds[] = {
 		sizeof(exit_sleep), exit_sleep},
 	{DTYPE_DCS_LWRITE, 1, 0, 0, 1,
 		sizeof(memory_start), memory_start},
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 1,
 		sizeof(enable_te), enable_te},
 	{DTYPE_DCS_WRITE, 1, 0, 0, 40,
@@ -611,6 +613,7 @@ static struct dsi_cmd_desc ruy_shp_cmd_on_cmds[] = {
 
 	{ DTYPE_DCS_LWRITE, 1, 0, 0, 0,
 		6, (char[]){ 0xF0, 0x55, 0xAA, 0x52, 0x00, 0x00 } },/* select page 0 */
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
 
 	{ DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(enable_te), enable_te },
@@ -682,6 +685,7 @@ static struct dsi_cmd_desc ruy_shp_c2_cmd_on_cmds[] = {
 
 	{ DTYPE_DCS_LWRITE, 1, 0, 0, 0,
 		6, (char[]){ 0xF0, 0x55, 0xAA, 0x52, 0x00, 0x00 } },/* select page 0 */
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
 
 	{ DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(enable_te), enable_te },
@@ -721,6 +725,7 @@ static struct dsi_cmd_desc ruy_shp_c2o_cmd_on_cmds[] = {
 
 	{ DTYPE_DCS_LWRITE, 1, 0, 0, 0,
 		6, (char[]){ 0xF0, 0x55, 0xAA, 0x52, 0x00, 0x00 } },/* select page 0 */
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
 
 	{ DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(enable_te), enable_te },
@@ -907,6 +912,7 @@ static struct dsi_cmd_desc pyd_sharp_cmd_on_cmds[] = {
 		sizeof(novatek_pwm_cp2), novatek_pwm_cp2},
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(novatek_pwm_cp3), novatek_pwm_cp3},
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(enable_te), enable_te},
 	{DTYPE_DCS_LWRITE, 1, 0, 0, 0,
@@ -1174,6 +1180,7 @@ static struct dsi_cmd_desc pyd_auo_cmd_on_cmds[] = {
 		sizeof(novatek_pwm_cp2), novatek_pwm_cp2},
     {DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(novatek_pwm_cp3), novatek_pwm_cp3},
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
     {DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(enable_te), enable_te},
     {DTYPE_DCS_LWRITE, 1, 0, 0, 0,
@@ -1323,6 +1330,7 @@ static struct dsi_cmd_desc shp_novatek_cmd_on_cmds[] = {
 		sizeof(novatek_pwm_cp2), novatek_pwm_cp2},
        {DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(novatek_pwm_cp3), novatek_pwm_cp3},
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
        {DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(enable_te), enable_te},
        {DTYPE_DCS_LWRITE, 1, 0, 0, 0,
@@ -1489,6 +1497,7 @@ static struct dsi_cmd_desc auo_nov_cmd_on_cmds[] = {
 	sizeof(novatek_pwm_cp2), novatek_pwm_cp2},
     {DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 	sizeof(novatek_pwm_cp3), novatek_pwm_cp3},
+    {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
     {DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 	sizeof(enable_te), enable_te},
     {DTYPE_DCS_LWRITE, 1, 0, 0, 0,
@@ -1526,6 +1535,7 @@ static struct dsi_cmd_desc shr_sharp_cmd_on_cmds[] = {
 		sizeof(novatek_pwm_cp2), novatek_pwm_cp2},
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(novatek_pwm_cp3), novatek_pwm_cp3},
+       {DTYPE_DCS_WRITE1, 1, 0, 0, 0, sizeof(bkl_enable_cmds), bkl_enable_cmds},
 	{DTYPE_DCS_WRITE1, 1, 0, 0, 0,
 		sizeof(enable_te), enable_te},
 	{DTYPE_DCS_LWRITE, 1, 0, 0, 0,
@@ -1557,11 +1567,6 @@ static struct dsi_cmd_desc novatek_cmd_backlight_cmds[] = {
 static struct dsi_cmd_desc novatek_display_on_cmds[] = {
 	{DTYPE_DCS_WRITE, 1, 0, 0, 0,
 		sizeof(display_on), display_on},
-};
-
-static struct dsi_cmd_desc novatek_bkl_enable_cmds[] = {
-	{DTYPE_DCS_WRITE1, 1, 0, 0, 0,
-		sizeof(bkl_enable_cmds), bkl_enable_cmds},
 };
 
 /* -----------------------------------------------------------------------------
@@ -1643,7 +1648,6 @@ static int mipi_pyramid_lcd_on(struct platform_device *pdev)
 {
 	struct msm_fb_data_type *mfd;
 	struct mipi_panel_info *mipi;
-        unsigned int val = 0;
 
         printk(KERN_ERR "%s: ++\n", __func__);
 
@@ -1660,45 +1664,63 @@ static int mipi_pyramid_lcd_on(struct platform_device *pdev)
 
         mipi_pyramid_send_cmd(mipi_power_on_cmd, mipi_power_on_cmd_size, false);
 
-        mipi_pyramid_send_cmd(novatek_display_on_cmds, ARRAY_SIZE(novatek_display_on_cmds), true);
-
-        mipi_pyramid_send_cmd(novatek_bkl_enable_cmds, ARRAY_SIZE(novatek_bkl_enable_cmds), false);
-
-        val = mfd->bl_level;
-        if (val == 0) {
-          if (bl_level_prevset != 1) {
-            val = bl_level_prevset;
-            mfd->bl_level = val;
-          } else {
-            val = DEFAULT_BRIGHTNESS;
-            mfd->bl_level = val;
-          }
-        }
-
         printk(KERN_ERR "%s: --\n", __func__);
 	return 0;
 }
 
+static int mipi_pyramid_display_on(struct platform_device *pdev)
+{
+  struct msm_fb_data_type *mfd;
+  unsigned int val = 0;
+
+  mfd = platform_get_drvdata(pdev);
+
+  mipi_pyramid_send_cmd(novatek_display_on_cmds, ARRAY_SIZE(novatek_display_on_cmds), true);
+
+  val = mfd->bl_level;
+  if (val == 0) {
+    if (bl_level_prevset != 1) {
+      val = bl_level_prevset;
+      mfd->bl_level = val;
+    } else {
+      val = DEFAULT_BRIGHTNESS;
+      mfd->bl_level = val;
+    }
+  }
+
+  return 0;
+}
+
 static int mipi_pyramid_lcd_off(struct platform_device *pdev)
 {
-	struct msm_fb_data_type *mfd;
+  struct msm_fb_data_type *mfd;
 
-	mfd = platform_get_drvdata(pdev);
+  mfd = platform_get_drvdata(pdev);
 
-	if (!mfd)
-		return -ENODEV;
-	if (mfd->key != MFD_KEY)
-		return -EINVAL;
+  if (!mfd)
+    return -ENODEV;
+  if (mfd->key != MFD_KEY)
+    return -EINVAL;
 
-        if (!mipi_lcd_on)
-          return 0;
+  if (!mipi_lcd_on)
+    return 0;
 
-        mfd->bl_level = 0;
-        mipi_dsi_set_backlight(mfd, mfd->bl_level);
-        mipi_pyramid_send_cmd(mipi_power_off_cmd, mipi_power_off_cmd_size, true);
-        mipi_lcd_on = 0;
+  mfd->bl_level = 0;
+  mipi_dsi_set_backlight(mfd, mfd->bl_level);
+  mipi_lcd_on = 0;
 
-	return 0;
+  return 0;
+}
+
+static int mipi_pyramid_display_off(struct platform_device *pdev)
+{
+  struct msm_fb_data_type *mfd;
+
+  mfd = platform_get_drvdata(pdev);
+
+  mipi_pyramid_send_cmd(mipi_power_off_cmd, mipi_power_off_cmd_size, true);
+
+  return 0;
 }
 
 static unsigned char pyd_shp_shrink_pwm(int br)
@@ -1800,6 +1822,8 @@ static struct msm_fb_panel_data pyramid_panel_data = {
 	.on		= mipi_pyramid_lcd_on,
         .off		= mipi_pyramid_lcd_off,
         .set_backlight  = mipi_pyramid_set_backlight,
+	.late_init = mipi_pyramid_display_on,
+	.early_off = mipi_pyramid_display_off,
 };
 
 static int ch_used[3];
