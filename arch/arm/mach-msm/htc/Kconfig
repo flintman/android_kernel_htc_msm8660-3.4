@@ -79,4 +79,11 @@ config MICROP_COMMON
 	depends on I2C
 	help
 	  HTC Microp-P support.
+
+config SUPPORT_DQ_BATTERY
+	bool "Support DQ battery."
+	default n
+	help
+		support DQ battery.
+
 endmenu
