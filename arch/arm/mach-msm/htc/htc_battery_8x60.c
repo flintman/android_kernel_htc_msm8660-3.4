@@ -708,6 +708,33 @@ static long htc_batt_ioctl(struct file *filp,
 		htc_battery_core_update_changed();
 		break;
 	}
+	case HTC_BATT_IOCTL_UPDATE_BATT_INFO_COMPAT: {
+                struct battery_info_reply_compat cmp;
+		mutex_lock(&htc_batt_info.info_lock);
+		if (copy_from_user(&cmp, (void *)arg,
+					sizeof(struct battery_info_reply))) {
+			BATT_ERR("copy_from_user failed!");
+			ret = -EFAULT;
+			mutex_unlock(&htc_batt_info.info_lock);
+			break;
+		}
+                htc_batt_info.rep.batt_vol = cmp.batt_vol;
+                htc_batt_info.rep.batt_id = cmp.batt_id;
+                htc_batt_info.rep.batt_temp = cmp.batt_temp;
+                htc_batt_info.rep.batt_current = cmp.batt_current;
+                htc_batt_info.rep.batt_discharg_current = cmp.batt_discharg_current;
+                htc_batt_info.rep.level = cmp.level;
+                htc_batt_info.rep.charging_source = cmp.charging_source;
+                htc_batt_info.rep.charging_enabled = cmp.charging_enabled;
+                htc_batt_info.rep.full_bat = cmp.full_bat;
+                htc_batt_info.rep.full_level = cmp.full_level;
+                htc_batt_info.rep.over_vchg = cmp.over_vchg;
+                htc_batt_info.rep.temp_fault = cmp.temp_fault;
+                htc_batt_info.rep.batt_state = cmp.batt_state;
+		mutex_unlock(&htc_batt_info.info_lock);
+                goto normal_info;
+                break;
+        }
 	case HTC_BATT_IOCTL_UPDATE_BATT_INFO: {
 		mutex_lock(&htc_batt_info.info_lock);
 		if (copy_from_user(&htc_batt_info.rep, (void *)arg,
@@ -718,6 +745,7 @@ static long htc_batt_ioctl(struct file *filp,
 			break;
 		}
 		mutex_unlock(&htc_batt_info.info_lock);
+          normal_info:
 
 #ifdef CONFIG_MACH_VILLEC2
 	if(htc_batt_info.rep.batt_id == 3)
