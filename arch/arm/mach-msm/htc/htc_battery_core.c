@@ -627,7 +627,7 @@ static int htc_battery_get_property(struct power_supply *psy,
 		break;
 	case POWER_SUPPLY_PROP_CAPACITY:
 		mutex_lock(&battery_core_info.info_lock);
-#ifdef CONFIG_HTC_BATT8x60
+#ifdef CONFIG_HTC_BATT_8x60
 		if (battery_core_info.htc_charge_full == 0)
 			val->intval = battery_core_info.rep.level;
 		else
@@ -967,7 +967,7 @@ int htc_battery_core_update_changed(void)
 	if (battery_core_info.rep.charging_source == CHARGER_BATTERY)
 		battery_core_info.htc_charge_full = 0;
 	else {
-#ifdef CONFIG_HTC_BATT8x60
+#ifdef CONFIG_HTC_BATT_8x60
 		if (battery_core_info.htc_charge_full &&
 				(battery_core_info.rep.full_level == 100))
 			battery_core_info.htc_charge_full = 1;
