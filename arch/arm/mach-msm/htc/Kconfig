@@ -10,6 +10,11 @@ endmenu
 
 menu "HTC Specific Patches"
 
+config ARCH_MSM8X60_LTE
+	bool "MSM8X60_LTE"
+	depends on ARCH_MSM8X60
+	default n
+
 config HTC_BATT_ALARM
 	bool "Enable 3.0V device shutdown mechanism"
 	depends on HAS_EARLYSUSPEND
