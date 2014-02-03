@@ -11,7 +11,6 @@
  *
  */
 
-#define HASTIMPANI 0
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/gpio.h>
@@ -50,12 +49,6 @@
 #include <linux/android_pmem.h>
 #endif
 
-#if defined(CONFIG_SMB137B_CHARGER) || defined(CONFIG_SMB137B_CHARGER_MODULE)
-#include <linux/i2c/smb137b.h>
-#endif
-#ifdef CONFIG_SND_SOC_WM8903
-#include <sound/wm8903.h>
-#endif
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
 #include <asm/setup.h>
@@ -138,8 +131,6 @@
 #include <mach/msm_rtb.h>
 
 extern int ps_type;
-
-#define MSM_SHARED_RAM_PHYS 0x40000000
 
 #define DSPS_PIL_GENERIC_NAME		"dsps"
 
@@ -1528,123 +1519,6 @@ static struct platform_device pyramid_rfkill = {
 #endif
 
 
-#ifdef CONFIG_BATTERY_MSM8X60
-static struct msm_charger_platform_data msm_charger_data = {
-	.safety_time = 180,
-	.update_time = 1,
-	.max_voltage = 4200,
-	.min_voltage = 3200,
-};
-
-static struct platform_device msm_charger_device = {
-	.name = "msm-charger",
-	.id = -1,
-	.dev = {
-		.platform_data = &msm_charger_data,
-	}
-};
-#endif
-
-#define RPM_VREG_INIT(_id, _min_uV, _max_uV, _modes, _ops, _apply_uV, \
-		      _default_uV, _peak_uA, _avg_uA, _pull_down, _pin_ctrl, \
-		      _freq, _pin_fn, _force_mode, _sleep_set_force_mode, \
-		      _state, _sleep_selectable, _always_on) \
-	{ \
-		.init_data = { \
-			.constraints = { \
-				.valid_modes_mask	= _modes, \
-				.valid_ops_mask		= _ops, \
-				.min_uV			= _min_uV, \
-				.max_uV			= _max_uV, \
-				.input_uV		= _min_uV, \
-				.apply_uV		= _apply_uV, \
-				.always_on		= _always_on, \
-			}, \
-			.consumer_supplies	= vreg_consumers_##_id, \
-			.num_consumer_supplies	= \
-				ARRAY_SIZE(vreg_consumers_##_id), \
-		}, \
-		.id			= RPM_VREG_ID_##_id, \
-		.default_uV		= _default_uV, \
-		.peak_uA		= _peak_uA, \
-		.avg_uA			= _avg_uA, \
-		.pull_down_enable	= _pull_down, \
-		.pin_ctrl		= _pin_ctrl, \
-		.freq			= RPM_VREG_FREQ_##_freq, \
-		.pin_fn			= _pin_fn, \
-		.force_mode		= _force_mode, \
-		.sleep_set_force_mode	= _sleep_set_force_mode, \
-		.state			= _state, \
-		.sleep_selectable	= _sleep_selectable, \
-	}
-
-#define RPM_PC(_id, _always_on, _pin_fn, _pin_ctrl) \
-	{ \
-		.init_data = { \
-			.constraints = { \
-				.valid_ops_mask	= REGULATOR_CHANGE_STATUS, \
-				.always_on	= _always_on, \
-			}, \
-			.num_consumer_supplies	= \
-					ARRAY_SIZE(vreg_consumers_##_id##_PC), \
-			.consumer_supplies	= vreg_consumers_##_id##_PC, \
-		}, \
-		.id	  = RPM_VREG_ID_##_id##_PC, \
-		.pin_fn	  = RPM_VREG_PIN_FN_8660_##_pin_fn, \
-		.pin_ctrl = _pin_ctrl, \
-	}
-
-
-#define RPM_LDO(_id, _always_on, _pd, _sleep_selectable, _min_uV, _max_uV, \
-		_init_peak_uA) \
-	RPM_VREG_INIT(_id, _min_uV, _max_uV, REGULATOR_MODE_FAST | \
-		      REGULATOR_MODE_NORMAL | REGULATOR_MODE_IDLE | \
-		      REGULATOR_MODE_STANDBY, REGULATOR_CHANGE_VOLTAGE | \
-		      REGULATOR_CHANGE_STATUS | REGULATOR_CHANGE_MODE | \
-		      REGULATOR_CHANGE_DRMS, 0, _min_uV, _init_peak_uA, \
-		      _init_peak_uA, _pd, RPM_VREG_PIN_CTRL_NONE, NONE, \
-		      RPM_VREG_PIN_FN_8660_ENABLE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, RPM_VREG_STATE_OFF, \
-		      _sleep_selectable, _always_on)
-
-#define RPM_SMPS(_id, _always_on, _pd, _sleep_selectable, _min_uV, _max_uV, \
-		 _init_peak_uA, _freq) \
-	RPM_VREG_INIT(_id, _min_uV, _max_uV, REGULATOR_MODE_FAST | \
-		      REGULATOR_MODE_NORMAL | REGULATOR_MODE_IDLE | \
-		      REGULATOR_MODE_STANDBY, REGULATOR_CHANGE_VOLTAGE | \
-		      REGULATOR_CHANGE_STATUS | REGULATOR_CHANGE_MODE | \
-		      REGULATOR_CHANGE_DRMS, 0, _min_uV, _init_peak_uA, \
-		      _init_peak_uA, _pd, RPM_VREG_PIN_CTRL_NONE, _freq, \
-		      RPM_VREG_PIN_FN_8660_ENABLE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, RPM_VREG_STATE_OFF, \
-		      _sleep_selectable, _always_on)
-
-#define RPM_VS(_id, _always_on, _pd, _sleep_selectable) \
-	RPM_VREG_INIT(_id, 0, 0, REGULATOR_MODE_NORMAL | REGULATOR_MODE_IDLE, \
-		      REGULATOR_CHANGE_STATUS | REGULATOR_CHANGE_MODE, 0, 0, \
-		      1000, 1000, _pd, RPM_VREG_PIN_CTRL_NONE, NONE, \
-		      RPM_VREG_PIN_FN_8660_ENABLE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, RPM_VREG_STATE_OFF, \
-		      _sleep_selectable, _always_on)
-
-#define RPM_NCP(_id, _always_on, _pd, _sleep_selectable, _min_uV, _max_uV) \
-	RPM_VREG_INIT(_id, _min_uV, _max_uV, REGULATOR_MODE_NORMAL, \
-		      REGULATOR_CHANGE_VOLTAGE | REGULATOR_CHANGE_STATUS, 0, \
-		      _min_uV, 1000, 1000, _pd, RPM_VREG_PIN_CTRL_NONE, NONE, \
-		      RPM_VREG_PIN_FN_8660_ENABLE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, RPM_VREG_STATE_OFF, \
-		      _sleep_selectable, _always_on)
-
-#define LDO50HMIN	RPM_VREG_8660_LDO_50_HPM_MIN_LOAD
-#define LDO150HMIN	RPM_VREG_8660_LDO_150_HPM_MIN_LOAD
-#define LDO300HMIN	RPM_VREG_8660_LDO_300_HPM_MIN_LOAD
-#define SMPS_HMIN	RPM_VREG_8660_SMPS_HPM_MIN_LOAD
-#define FTS_HMIN	RPM_VREG_8660_FTSMPS_HPM_MIN_LOAD
-
 static struct platform_device rpm_regulator_device __devinitdata = {
 	.name	= "rpm-regulator",
 	.id	= -1,
@@ -2139,9 +2013,6 @@ static struct platform_device *pyramid_devices[] __initdata = {
 	&asoc_mvs_dai1,
 #endif
 
-#ifdef CONFIG_BATTERY_MSM
-	&msm_batt_device,
-#endif
 #ifdef CONFIG_ANDROID_PMEM
 #ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
 	&android_pmem_device,
@@ -2326,196 +2197,6 @@ static void __init pyramid_reserve(void)
 {
 	msm_reserve();
 }
-
-#define EXT_CHG_VALID_MPP 10
-#define EXT_CHG_VALID_MPP_2 11
-
-#define PM_GPIO_CDC_RST_N 20
-#define GPIO_CDC_RST_N PM8058_GPIO_PM_TO_SYS(PM_GPIO_CDC_RST_N)
-
-#if HASTIMPANI
-static struct regulator *vreg_timpani_1;
-static struct regulator *vreg_timpani_2;
-
-static unsigned int msm_timpani_setup_power(void)
-{
-	int rc;
-
-	vreg_timpani_1 = regulator_get(NULL, "8058_l0");
-	if (IS_ERR(vreg_timpani_1)) {
-		pr_err("%s: Unable to get 8058_l0\n", __func__);
-		return -ENODEV;
-	}
-
-	vreg_timpani_2 = regulator_get(NULL, "8058_s3");
-	if (IS_ERR(vreg_timpani_2)) {
-		pr_err("%s: Unable to get 8058_s3\n", __func__);
-		regulator_put(vreg_timpani_1);
-		return -ENODEV;
-	}
-
-	rc = regulator_set_voltage(vreg_timpani_1, 1200000, 1200000);
-	if (rc) {
-		pr_err("%s: unable to set L0 voltage to 1.2V\n", __func__);
-		goto fail;
-	}
-
-	rc = regulator_set_voltage(vreg_timpani_2, 1800000, 1800000);
-	if (rc) {
-		pr_err("%s: unable to set S3 voltage to 1.8V\n", __func__);
-		goto fail;
-	}
-
-	rc = regulator_enable(vreg_timpani_1);
-	if (rc) {
-		pr_err("%s: Enable regulator 8058_l0 failed\n", __func__);
-		goto fail;
-	}
-
-	/* The settings for LDO0 should be set such that
-	*  it doesn't require to reset the timpani. */
-	rc = regulator_set_optimum_mode(vreg_timpani_1, 5000);
-	if (rc < 0) {
-		pr_err("Timpani regulator optimum mode setting failed\n");
-		goto fail;
-	}
-
-	rc = regulator_enable(vreg_timpani_2);
-	if (rc) {
-		pr_err("%s: Enable regulator 8058_s3 failed\n", __func__);
-		regulator_disable(vreg_timpani_1);
-		goto fail;
-	}
-
-	rc = gpio_request(GPIO_CDC_RST_N, "CDC_RST_N");
-	if (rc) {
-		pr_err("%s: GPIO Request %d failed\n", __func__,
-			GPIO_CDC_RST_N);
-		regulator_disable(vreg_timpani_1);
-		regulator_disable(vreg_timpani_2);
-		goto fail;
-	} else {
-		gpio_direction_output(GPIO_CDC_RST_N, 1);
-		usleep_range(1000, 1050);
-		gpio_direction_output(GPIO_CDC_RST_N, 0);
-		usleep_range(1000, 1050);
-		gpio_direction_output(GPIO_CDC_RST_N, 1);
-		gpio_free(GPIO_CDC_RST_N);
-	}
-	return rc;
-
-fail:
-	regulator_put(vreg_timpani_1);
-	regulator_put(vreg_timpani_2);
-	return rc;
-}
-
-static void msm_timpani_shutdown_power(void)
-{
-	int rc;
-
-	rc = regulator_disable(vreg_timpani_1);
-	if (rc)
-		pr_err("%s: Disable regulator 8058_l0 failed\n", __func__);
-
-	regulator_put(vreg_timpani_1);
-
-	rc = regulator_disable(vreg_timpani_2);
-	if (rc)
-		pr_err("%s: Disable regulator 8058_s3 failed\n", __func__);
-
-	regulator_put(vreg_timpani_2);
-}
-
-/* Power analog function of codec */
-static struct regulator *vreg_timpani_cdc_apwr;
-static int msm_timpani_codec_power(int vreg_on)
-{
-	int rc = 0;
-
-	if (!vreg_timpani_cdc_apwr) {
-
-		vreg_timpani_cdc_apwr = regulator_get(NULL, "8058_s4");
-
-		if (IS_ERR(vreg_timpani_cdc_apwr)) {
-			pr_err("%s: vreg_get failed (%ld)\n",
-			__func__, PTR_ERR(vreg_timpani_cdc_apwr));
-			rc = PTR_ERR(vreg_timpani_cdc_apwr);
-			return rc;
-		}
-	}
-
-	if (vreg_on) {
-
-		rc = regulator_set_voltage(vreg_timpani_cdc_apwr,
-				2200000, 2200000);
-		if (rc) {
-			pr_err("%s: unable to set 8058_s4 voltage to 2.2 V\n",
-					__func__);
-			goto vreg_fail;
-		}
-
-		rc = regulator_enable(vreg_timpani_cdc_apwr);
-		if (rc) {
-			pr_err("%s: vreg_enable failed %d\n", __func__, rc);
-			goto vreg_fail;
-		}
-	} else {
-		rc = regulator_disable(vreg_timpani_cdc_apwr);
-		if (rc) {
-			pr_err("%s: vreg_disable failed %d\n",
-			__func__, rc);
-			goto vreg_fail;
-		}
-	}
-
-	return 0;
-
-vreg_fail:
-	regulator_put(vreg_timpani_cdc_apwr);
-	vreg_timpani_cdc_apwr = NULL;
-	return rc;
-}
-
-static struct marimba_codec_platform_data timpani_codec_pdata = {
-	.marimba_codec_power =  msm_timpani_codec_power,
-};
-
-#define TIMPANI_SLAVE_ID_CDC_ADDR		0X77
-#define TIMPANI_SLAVE_ID_QMEMBIST_ADDR		0X66
-
-static struct marimba_platform_data timpani_pdata = {
-	.slave_id[MARIMBA_SLAVE_ID_CDC] = TIMPANI_SLAVE_ID_CDC_ADDR,
-	.slave_id[MARIMBA_SLAVE_ID_QMEMBIST] = TIMPANI_SLAVE_ID_QMEMBIST_ADDR,
-	.marimba_setup = msm_timpani_setup_power,
-	.marimba_shutdown = msm_timpani_shutdown_power,
-	.codec = &timpani_codec_pdata,
-	.tsadc_ssbi_adap = MARIMBA_SSBI_ADAP,
-};
-
-#define TIMPANI_I2C_SLAVE_ADDR	0xD
-
-static struct i2c_board_info msm_i2c_gsbi7_timpani_info[] = {
-	{
-		I2C_BOARD_INFO("timpani", TIMPANI_I2C_SLAVE_ADDR),
-		.platform_data = &timpani_pdata,
-	},
-};
-#endif
-
-#ifdef CONFIG_SND_SOC_WM8903
-static struct wm8903_platform_data wm8903_pdata = {
-	.gpio_cfg[2] = 0x3A8,
-};
-
-#define WM8903_I2C_SLAVE_ADDR 0x34
-static struct i2c_board_info wm8903_codec_i2c_info[] = {
-	{
-		I2C_BOARD_INFO("wm8903", WM8903_I2C_SLAVE_ADDR >> 1),
-		.platform_data = &wm8903_pdata,
-	},
-};
-#endif
 
 #ifdef CONFIG_MSM8X60_AUDIO_1X
 static uint32_t msm_spi_gpio[] = {
@@ -2773,14 +2454,6 @@ static struct i2c_registry msm8x60_i2c_devices[] __initdata = {
 		MSM_GSBI4_QUP_I2C_BUS_ID,
 		msm_camera_boardinfo,
 		ARRAY_SIZE(msm_camera_boardinfo),
-	},
-#endif
-#if HASTIMPANI
-	{
-		I2C_SURF | I2C_FFA | I2C_FLUID,
-		MSM_GSBI7_QUP_I2C_BUS_ID,
-		msm_i2c_gsbi7_timpani_info,
-		ARRAY_SIZE(msm_i2c_gsbi7_timpani_info),
 	},
 #endif
 #ifdef CONFIG_TPS65200
@@ -3045,10 +2718,6 @@ static void __init pyramid_init(void)
 		htc_headset_mgr_data.headset_config = htc_headset_mgr_config;
 		printk(KERN_INFO "[HS_BOARD] (%s) Set MEMS config\n", __func__);
 	}
-
-#ifdef CONFIG_BATTERY_MSM8X60
-        platform_device_register(&msm_charger_device);
-#endif
 
 	if (SOCINFO_VERSION_MAJOR(socinfo_get_version()) != 1)
 		platform_add_devices(msm8660_footswitch,
