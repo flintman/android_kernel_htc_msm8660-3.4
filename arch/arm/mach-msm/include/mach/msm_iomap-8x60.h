@@ -139,4 +139,6 @@
 extern void msm_map_msm8x60_io(void);
 #endif
 
+#define MSM_SHARED_RAM_PHYS 0x40000000
+
 #endif
