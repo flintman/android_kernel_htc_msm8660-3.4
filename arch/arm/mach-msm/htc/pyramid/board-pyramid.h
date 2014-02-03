@@ -133,6 +133,7 @@
 
 extern struct regulator_init_data msm_saw_regulator_pdata_s0;
 extern struct regulator_init_data msm_saw_regulator_pdata_s1;
+extern struct rpm_regulator_platform_data pyramid_rpm_regulator_early_pdata __devinitdata;
 extern struct rpm_regulator_platform_data pyramid_rpm_regulator_pdata __devinitdata;
 extern struct platform_device msm8x60_8901_mpp_vreg __devinitdata;
 extern struct pm8901_vreg_pdata pm8901_regulator_pdata[];

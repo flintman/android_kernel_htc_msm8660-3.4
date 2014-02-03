@@ -1519,17 +1519,29 @@ static struct platform_device pyramid_rfkill = {
 #endif
 
 
+static struct platform_device rpm_regulator_early_device __devinitdata = {
+	.name	= "rpm-regulator",
+	.id	= 0,
+	.dev	= {
+		.platform_data = &pyramid_rpm_regulator_early_pdata,
+	},
+};
+
 static struct platform_device rpm_regulator_device __devinitdata = {
 	.name	= "rpm-regulator",
-	.id	= -1,
+	.id	= 1,
 	.dev	= {
 		.platform_data = &pyramid_rpm_regulator_pdata,
 	},
 };
 
-static struct platform_device *early_devices[] __initdata = {
+static struct platform_device *early_regulators[] __initdata = {
 	&msm_device_saw_s0,
 	&msm_device_saw_s1,
+	&rpm_regulator_early_device,
+};
+
+static struct platform_device *early_devices[] __initdata = {
 #ifdef CONFIG_MSM_BUS_SCALING
 	&msm_bus_apps_fabric,
 	&msm_bus_sys_fabric,
@@ -2662,11 +2674,13 @@ static void __init pyramid_init(void)
 	BUG_ON(msm_rpm_init(&msm8660_rpm_data));
 	BUG_ON(msm_rpmrs_levels_init(&msm_rpmrs_data));
 
-	regulator_suppress_info_printing();
-
 	if (msm_xo_init())
 		pr_err("Failed to initialize XO votes\n");
 	
+	regulator_suppress_info_printing();
+
+	platform_add_devices(early_regulators, ARRAY_SIZE(early_regulators));
+
 	platform_device_register(&rpm_regulator_device);
 
 	msm_clock_init(&msm8x60_clock_init_data);
