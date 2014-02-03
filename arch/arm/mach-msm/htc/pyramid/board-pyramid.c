@@ -151,7 +151,7 @@ static struct msm_spm_platform_data msm_spm_data_v1[] __initdata = {
 		.reg_init_values[MSM_SPM_REG_SAW_SPM_SLP_TMR_DLY] = 0xFFFFFFFF,
 		.reg_init_values[MSM_SPM_REG_SAW_SPM_WAKE_TMR_DLY] = 0xFFFFFFFF,
 
-		.reg_init_values[MSM_SPM_REG_SAW_SLP_CLK_EN] = 0x01,
+		.reg_init_values[MSM_SPM_REG_SAW_SLP_CLK_EN] = 0x11,
 		.reg_init_values[MSM_SPM_REG_SAW_SLP_HSFS_PRECLMP_EN] = 0x07,
 		.reg_init_values[MSM_SPM_REG_SAW_SLP_HSFS_POSTCLMP_EN] = 0x00,
 
@@ -209,7 +209,7 @@ static struct msm_spm_platform_data msm_spm_data[] __initdata = {
 		.reg_init_values[MSM_SPM_REG_SAW_SPM_SLP_TMR_DLY] = 0x0C0CFFFF,
 		.reg_init_values[MSM_SPM_REG_SAW_SPM_WAKE_TMR_DLY] = 0x78780FFF,
 
-		.reg_init_values[MSM_SPM_REG_SAW_SLP_CLK_EN] = 0x01,
+		.reg_init_values[MSM_SPM_REG_SAW_SLP_CLK_EN] = 0x11,
 		.reg_init_values[MSM_SPM_REG_SAW_SLP_HSFS_PRECLMP_EN] = 0x07,
 		.reg_init_values[MSM_SPM_REG_SAW_SLP_HSFS_POSTCLMP_EN] = 0x00,
 
@@ -457,7 +457,7 @@ static struct msm_rpmrs_platform_data msm_rpmrs_data __initdata = {
 		[MSM_RPMRS_VDD_MEM_RET_LOW]     = 500,
 		[MSM_RPMRS_VDD_MEM_RET_HIGH]    = 750,
 		[MSM_RPMRS_VDD_MEM_ACTIVE]      = 1000,
-		[MSM_RPMRS_VDD_MEM_MAX]         = 1325,
+		[MSM_RPMRS_VDD_MEM_MAX]         = 1250,
 	},
 	.vdd_dig_levels = {
 		[MSM_RPMRS_VDD_DIG_RET_LOW]     = 500,
