@@ -26,6 +26,9 @@ obj-$(CONFIG_MACH_M4_UL) += m4ul/
 # PYRAMID
 obj-$(CONFIG_MACH_PYRAMID) += pyramid/
 
+# SHOOTER
+obj-$(CONFIG_MACH_SHOOTER) += shooter/
+
 # VISION
 obj-$(CONFIG_MACH_VISION) += vision/
 
