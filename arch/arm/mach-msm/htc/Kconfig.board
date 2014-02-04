@@ -32,6 +32,9 @@ source "arch/arm/mach-msm/htc/vision/Kconfig"
 # M7_UL
 source "arch/arm/mach-msm/htc/m7ul/Kconfig"
 
+# RUBY
+source "arch/arm/mach-msm/htc/ruby/Kconfig"
+
 config MACH_HTC_DUMMY
        depends on MACH_HTC
        bool "NONE (No device)"
