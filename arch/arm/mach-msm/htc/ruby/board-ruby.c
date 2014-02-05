@@ -2224,6 +2224,21 @@ static void __init ruby_reserve(void)
 	msm_reserve();
 }
 
+void msm_fusion_setup_pinctrl(void)
+{
+	struct msm_xo_voter *a1;
+
+	if (socinfo_get_platform_subtype() == 0x3) {
+		/*
+		 * Vote for the A1 clock to be in pin control mode before
+		* the external images are loaded.
+		*/
+		a1 = msm_xo_get(MSM_XO_TCXO_A1, "mdm");
+		BUG_ON(!a1);
+		msm_xo_mode_vote(a1, MSM_XO_MODE_PIN_CTRL);
+	}
+}
+
 #define PM_GPIO_CDC_RST_N 20
 #define GPIO_CDC_RST_N PM8058_GPIO_PM_TO_SYS(PM_GPIO_CDC_RST_N)
 
@@ -3014,6 +3029,7 @@ static void __init ruby_init(void)
         int rc;
 	uint32_t soc_platform_version;
 	struct kobject *properties_kobj;
+	struct regulator *margin_power;
 
 	if (meminfo_init(SYS_MEMORY, SZ_256M) < 0)
 		pr_err("meminfo_init() failed!\n");
@@ -3134,6 +3150,17 @@ static void __init ruby_init(void)
         ruby_init_keypad();
         ruby_wifi_init();
         headset_device_register();
+	msm_fusion_setup_pinctrl();
+
+	/* change S4B to 1.25v, L22A to 1.2v for DDR stability issue */
+	margin_power = regulator_get(NULL, "8901_s4");
+	regulator_set_voltage(margin_power, 1250000, 1250000);
+	regulator_enable(margin_power);
+	regulator_put(margin_power);
+	margin_power = regulator_get(NULL, "8058_l22");
+	regulator_set_voltage(margin_power, 1200000, 1200000);
+	regulator_enable(margin_power);
+	regulator_put(margin_power);
 
         printk(KERN_ERR "%s: --\n", __func__);
 }
