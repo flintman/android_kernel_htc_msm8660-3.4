@@ -415,6 +415,7 @@ void __init ruby_pm8901_gpio_mpp_init(void)
 	 * MPP0 is low.
 	 */
         msm_gpio_regulator_pdata[GPIO_VREG_ID_EXT_5V].active_low = 0;
+        pm8901_vreg_mpp0.config.control = PM8XXX_MPP_DOUT_CTRL_LOW;
 
 	rc = pm8xxx_mpp_config(pm8901_vreg_mpp0.mpp, &pm8901_vreg_mpp0.config);
 	if (rc)
@@ -426,14 +427,16 @@ struct regulator_init_data msm_saw_regulator_pdata_s0 =
 	/*	      ID  vreg_name	       min_uV   max_uV */
 	SAW_VREG_INIT(PM8901_S0, "8901_s0",	       800000, 1325000);
 struct regulator_init_data msm_saw_regulator_pdata_s1 =
-	SAW_VREG_INIT(PM8901_S1, "8921_s1",	       800000, 1325000);
+	SAW_VREG_INIT(PM8901_S1, "8901_s1",	       800000, 1325000);
 
 /* RPM regulator constraints */
-static struct rpm_regulator_init_data rpm_regulator_init_data[] __devinitdata = {
+static struct rpm_regulator_init_data rpm_regulator_early_init_data[] __devinitdata = {
 	/*	 ID       a_on pd ss min_uV   max_uV   init_ip    freq */
 	RPM_SMPS(PM8058_S0, 0, 1, 1,  500000, 1250000, SMPS_HMIN, 1p92),
 	RPM_SMPS(PM8058_S1, 0, 1, 1,  500000, 1250000, SMPS_HMIN, 1p92),
+};
 
+static struct rpm_regulator_init_data rpm_regulator_init_data[] __devinitdata = {
 	/*	ID        a_on pd ss min_uV   max_uV   init_ip */
 	RPM_LDO(PM8058_L0,  0, 0, 0, 1200000, 1200000, LDO150HMIN),
 	RPM_LDO(PM8058_L1,  0, 1, 0, 1350000, 1350000, LDO300HMIN),
@@ -500,11 +503,17 @@ static struct rpm_regulator_init_data rpm_regulator_init_data[] __devinitdata = 
 	RPM_PC(PM8901_S4,   0, ENABLE,  RPM_VREG_PIN_CTRL_PM8901_A0),
 };
 
+struct rpm_regulator_platform_data ruby_rpm_regulator_early_pdata __devinitdata = {
+	.init_data		= rpm_regulator_early_init_data,
+	.num_regulators		= ARRAY_SIZE(rpm_regulator_early_init_data),
+	.version		= RPM_VREG_VERSION_8660,
+	.vreg_id_vdd_mem	= RPM_VREG_ID_PM8058_S0,
+	.vreg_id_vdd_dig	= RPM_VREG_ID_PM8058_S1,
+};
+
 struct rpm_regulator_platform_data ruby_rpm_regulator_pdata __devinitdata = {
 	.init_data		= rpm_regulator_init_data,
 	.num_regulators		= ARRAY_SIZE(rpm_regulator_init_data),
 	.version		= RPM_VREG_VERSION_8660,
-	.vreg_id_vdd_mem	= RPM_VREG_ID_PM8058_S0,
-	.vreg_id_vdd_dig	= RPM_VREG_ID_PM8058_S1,
 };
 

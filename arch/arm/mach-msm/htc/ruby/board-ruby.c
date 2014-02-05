@@ -11,7 +11,6 @@
  *
  */
 
-#define HASTIMPANI 1
 #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/gpio.h>
@@ -51,12 +50,6 @@
 #include <linux/android_pmem.h>
 #endif
 
-#if defined(CONFIG_SMB137B_CHARGER) || defined(CONFIG_SMB137B_CHARGER_MODULE)
-#include <linux/i2c/smb137b.h>
-#endif
-#ifdef CONFIG_SND_SOC_WM8903
-#include <sound/wm8903.h>
-#endif
 #include <asm/mach-types.h>
 #include <asm/mach/arch.h>
 #include <asm/setup.h>
@@ -142,8 +135,6 @@
 
 extern int ps_type;
 
-#define MSM_SHARED_RAM_PHYS 0x40000000
-
 static unsigned int engineerid, mem_size_mb;
 
 static struct msm_spm_platform_data msm_spm_data_v1[] __initdata = {
@@ -158,7 +149,7 @@ static struct msm_spm_platform_data msm_spm_data_v1[] __initdata = {
 		.reg_init_values[MSM_SPM_REG_SAW_SPM_SLP_TMR_DLY] = 0xFFFFFFFF,
 		.reg_init_values[MSM_SPM_REG_SAW_SPM_WAKE_TMR_DLY] = 0xFFFFFFFF,
 
-		.reg_init_values[MSM_SPM_REG_SAW_SLP_CLK_EN] = 0x01,
+		.reg_init_values[MSM_SPM_REG_SAW_SLP_CLK_EN] = 0x11,
 		.reg_init_values[MSM_SPM_REG_SAW_SLP_HSFS_PRECLMP_EN] = 0x07,
 		.reg_init_values[MSM_SPM_REG_SAW_SLP_HSFS_POSTCLMP_EN] = 0x00,
 
@@ -216,7 +207,7 @@ static struct msm_spm_platform_data msm_spm_data[] __initdata = {
 		.reg_init_values[MSM_SPM_REG_SAW_SPM_SLP_TMR_DLY] = 0x0C0CFFFF,
 		.reg_init_values[MSM_SPM_REG_SAW_SPM_WAKE_TMR_DLY] = 0x78780FFF,
 
-		.reg_init_values[MSM_SPM_REG_SAW_SLP_CLK_EN] = 0x01,
+		.reg_init_values[MSM_SPM_REG_SAW_SLP_CLK_EN] = 0x11,
 		.reg_init_values[MSM_SPM_REG_SAW_SLP_HSFS_PRECLMP_EN] = 0x07,
 		.reg_init_values[MSM_SPM_REG_SAW_SLP_HSFS_POSTCLMP_EN] = 0x00,
 
@@ -464,7 +455,7 @@ static struct msm_rpmrs_platform_data msm_rpmrs_data __initdata = {
 		[MSM_RPMRS_VDD_MEM_RET_LOW]     = 500,
 		[MSM_RPMRS_VDD_MEM_RET_HIGH]    = 750,
 		[MSM_RPMRS_VDD_MEM_ACTIVE]      = 1000,
-		[MSM_RPMRS_VDD_MEM_MAX]         = 1325,
+		[MSM_RPMRS_VDD_MEM_MAX]         = 1250,
 	},
 	.vdd_dig_levels = {
 		[MSM_RPMRS_VDD_DIG_RET_LOW]     = 500,
@@ -1189,7 +1180,6 @@ static struct msm_i2c_ssbi_platform_data msm_ssbi3_pdata = {
 #endif
 
 #define MSM_PMEM_SF_SIZE 0x4000000 /* 64 Mbytes */
-#define MSM_HDMI_PRIM_PMEM_SF_SIZE 0x4000000 /* 64 Mbytes */
 
 #define MSM_PMEM_KERNEL_EBI1_SIZE  0x600000
 #define MSM_PMEM_ADSP_SIZE         0x4200000
@@ -1212,7 +1202,14 @@ static struct msm_i2c_ssbi_platform_data msm_ssbi3_pdata = {
 #define MSM_ION_SF_SIZE		0x4000000 /* 64MB */
 #define MSM_ION_CAMERA_SIZE     MSM_PMEM_ADSP_SIZE
 #define MSM_ION_QSECOM_SIZE	0x600000 /* (6MB) */
-#define MSM_ION_AUDIO_SIZE	0x28B000
+
+#ifdef CONFIG_FB_MSM_OVERLAY1_WRITEBACK
+#define MSM_ION_WB_SIZE		0xC00000 /* 12MB */
+#else
+#define MSM_ION_WB_SIZE		0x600000 /* 6MB */
+#endif
+
+#define MSM_ION_AUDIO_SIZE      0x28B000
 
 #ifdef CONFIG_MSM_CP
 #define MSM_ION_HOLE_SIZE	SZ_128K /* (128KB) */
@@ -1220,12 +1217,12 @@ static struct msm_i2c_ssbi_platform_data msm_ssbi3_pdata = {
 #define MSM_ION_HOLE_SIZE	0
 #endif
 
-#define MSM_ION_MM_FW_SIZE	(0x200000 - MSM_ION_HOLE_SIZE) /*(2MB-128KB)*/
+#define MSM_MM_FW_SIZE		(0x200000 - MSM_ION_HOLE_SIZE) /*(2MB-128KB)*/
 #define MSM_ION_MM_SIZE		0x6600000  /* (102MB) */
 #define MSM_ION_MFC_SIZE	SZ_8K
 
-#define MSM_ION_MM_FW_BASE	MSM_SMI_BASE
-#define MSM_ION_HOLE_BASE	(MSM_ION_MM_FW_BASE + MSM_ION_MM_FW_SIZE)
+#define MSM_MM_FW_BASE		MSM_SMI_BASE
+#define MSM_ION_HOLE_BASE	(MSM_MM_FW_BASE + MSM_MM_FW_SIZE)
 #define MSM_ION_MM_BASE		(MSM_ION_HOLE_BASE + MSM_ION_HOLE_SIZE)
 #define MSM_ION_MFC_BASE	(MSM_ION_MM_BASE + MSM_ION_MM_SIZE)
 
@@ -1234,23 +1231,11 @@ static struct msm_i2c_ssbi_platform_data msm_ssbi3_pdata = {
 #define SECURE_BASE  (MSM_ION_HOLE_BASE)
 #define SECURE_SIZE  (MSM_ION_MM_SIZE + MSM_ION_HOLE_SIZE)
 #else
-#define SECURE_BASE  (MSM_ION_MM_FW_BASE)
-#define SECURE_SIZE  (MSM_ION_MM_SIZE + MSM_ION_MM_FW_SIZE)
+#define SECURE_BASE  (MSM_MM_FW_BASE)
+#define SECURE_SIZE  (MSM_ION_MM_SIZE + MSM_MM_FW_SIZE)
 #endif
 
-#ifdef CONFIG_FB_MSM_OVERLAY1_WRITEBACK
-#define MSM_ION_WB_SIZE		0xC00000 /* 12MB */
-#else
-#define MSM_ION_WB_SIZE		0x600000 /* 6MB */
-#endif
-
-#ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-#define MSM_ION_HEAP_NUM	8
-#define MSM_HDMI_PRIM_ION_SF_SIZE MSM_HDMI_PRIM_PMEM_SF_SIZE
-static unsigned msm_ion_sf_size = MSM_ION_SF_SIZE;
-#else
-#define MSM_ION_HEAP_NUM	1
-#endif
+#define MSM_ION_HEAP_NUM	9
 
 static unsigned fb_size;
 static int __init fb_size_setup(char *p)
@@ -1528,135 +1513,29 @@ static struct platform_device ruby_rfkill = {
 	.id = -1,
 };
 
-
-#ifdef CONFIG_BATTERY_MSM8X60
-static struct msm_charger_platform_data msm_charger_data = {
-	.safety_time = 180,
-	.update_time = 1,
-	.max_voltage = 4200,
-	.min_voltage = 3200,
+static struct platform_device rpm_regulator_early_device __devinitdata = {
+	.name	= "rpm-regulator",
+	.id	= 0,
+	.dev	= {
+		.platform_data = &ruby_rpm_regulator_early_pdata,
+	},
 };
-
-static struct platform_device msm_charger_device = {
-	.name = "msm-charger",
-	.id = -1,
-	.dev = {
-		.platform_data = &msm_charger_data,
-	}
-};
-#endif
-
-#define RPM_VREG_INIT(_id, _min_uV, _max_uV, _modes, _ops, _apply_uV, \
-		      _default_uV, _peak_uA, _avg_uA, _pull_down, _pin_ctrl, \
-		      _freq, _pin_fn, _force_mode, _sleep_set_force_mode, \
-		      _state, _sleep_selectable, _always_on) \
-	{ \
-		.init_data = { \
-			.constraints = { \
-				.valid_modes_mask	= _modes, \
-				.valid_ops_mask		= _ops, \
-				.min_uV			= _min_uV, \
-				.max_uV			= _max_uV, \
-				.input_uV		= _min_uV, \
-				.apply_uV		= _apply_uV, \
-				.always_on		= _always_on, \
-			}, \
-			.consumer_supplies	= vreg_consumers_##_id, \
-			.num_consumer_supplies	= \
-				ARRAY_SIZE(vreg_consumers_##_id), \
-		}, \
-		.id			= RPM_VREG_ID_##_id, \
-		.default_uV		= _default_uV, \
-		.peak_uA		= _peak_uA, \
-		.avg_uA			= _avg_uA, \
-		.pull_down_enable	= _pull_down, \
-		.pin_ctrl		= _pin_ctrl, \
-		.freq			= RPM_VREG_FREQ_##_freq, \
-		.pin_fn			= _pin_fn, \
-		.force_mode		= _force_mode, \
-		.sleep_set_force_mode	= _sleep_set_force_mode, \
-		.state			= _state, \
-		.sleep_selectable	= _sleep_selectable, \
-	}
-
-#define RPM_PC(_id, _always_on, _pin_fn, _pin_ctrl) \
-	{ \
-		.init_data = { \
-			.constraints = { \
-				.valid_ops_mask	= REGULATOR_CHANGE_STATUS, \
-				.always_on	= _always_on, \
-			}, \
-			.num_consumer_supplies	= \
-					ARRAY_SIZE(vreg_consumers_##_id##_PC), \
-			.consumer_supplies	= vreg_consumers_##_id##_PC, \
-		}, \
-		.id	  = RPM_VREG_ID_##_id##_PC, \
-		.pin_fn	  = RPM_VREG_PIN_FN_8660_##_pin_fn, \
-		.pin_ctrl = _pin_ctrl, \
-	}
-
-
-#define RPM_LDO(_id, _always_on, _pd, _sleep_selectable, _min_uV, _max_uV, \
-		_init_peak_uA) \
-	RPM_VREG_INIT(_id, _min_uV, _max_uV, REGULATOR_MODE_FAST | \
-		      REGULATOR_MODE_NORMAL | REGULATOR_MODE_IDLE | \
-		      REGULATOR_MODE_STANDBY, REGULATOR_CHANGE_VOLTAGE | \
-		      REGULATOR_CHANGE_STATUS | REGULATOR_CHANGE_MODE | \
-		      REGULATOR_CHANGE_DRMS, 0, _min_uV, _init_peak_uA, \
-		      _init_peak_uA, _pd, RPM_VREG_PIN_CTRL_NONE, NONE, \
-		      RPM_VREG_PIN_FN_8660_ENABLE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, RPM_VREG_STATE_OFF, \
-		      _sleep_selectable, _always_on)
-
-#define RPM_SMPS(_id, _always_on, _pd, _sleep_selectable, _min_uV, _max_uV, \
-		 _init_peak_uA, _freq) \
-	RPM_VREG_INIT(_id, _min_uV, _max_uV, REGULATOR_MODE_FAST | \
-		      REGULATOR_MODE_NORMAL | REGULATOR_MODE_IDLE | \
-		      REGULATOR_MODE_STANDBY, REGULATOR_CHANGE_VOLTAGE | \
-		      REGULATOR_CHANGE_STATUS | REGULATOR_CHANGE_MODE | \
-		      REGULATOR_CHANGE_DRMS, 0, _min_uV, _init_peak_uA, \
-		      _init_peak_uA, _pd, RPM_VREG_PIN_CTRL_NONE, _freq, \
-		      RPM_VREG_PIN_FN_8660_ENABLE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, RPM_VREG_STATE_OFF, \
-		      _sleep_selectable, _always_on)
-
-#define RPM_VS(_id, _always_on, _pd, _sleep_selectable) \
-	RPM_VREG_INIT(_id, 0, 0, REGULATOR_MODE_NORMAL | REGULATOR_MODE_IDLE, \
-		      REGULATOR_CHANGE_STATUS | REGULATOR_CHANGE_MODE, 0, 0, \
-		      1000, 1000, _pd, RPM_VREG_PIN_CTRL_NONE, NONE, \
-		      RPM_VREG_PIN_FN_8660_ENABLE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, RPM_VREG_STATE_OFF, \
-		      _sleep_selectable, _always_on)
-
-#define RPM_NCP(_id, _always_on, _pd, _sleep_selectable, _min_uV, _max_uV) \
-	RPM_VREG_INIT(_id, _min_uV, _max_uV, REGULATOR_MODE_NORMAL, \
-		      REGULATOR_CHANGE_VOLTAGE | REGULATOR_CHANGE_STATUS, 0, \
-		      _min_uV, 1000, 1000, _pd, RPM_VREG_PIN_CTRL_NONE, NONE, \
-		      RPM_VREG_PIN_FN_8660_ENABLE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, \
-		      RPM_VREG_FORCE_MODE_8660_NONE, RPM_VREG_STATE_OFF, \
-		      _sleep_selectable, _always_on)
-
-#define LDO50HMIN	RPM_VREG_8660_LDO_50_HPM_MIN_LOAD
-#define LDO150HMIN	RPM_VREG_8660_LDO_150_HPM_MIN_LOAD
-#define LDO300HMIN	RPM_VREG_8660_LDO_300_HPM_MIN_LOAD
-#define SMPS_HMIN	RPM_VREG_8660_SMPS_HPM_MIN_LOAD
-#define FTS_HMIN	RPM_VREG_8660_FTSMPS_HPM_MIN_LOAD
 
 static struct platform_device rpm_regulator_device __devinitdata = {
 	.name	= "rpm-regulator",
-	.id	= -1,
+	.id	= 1,
 	.dev	= {
 		.platform_data = &ruby_rpm_regulator_pdata,
 	},
 };
 
-static struct platform_device *early_devices[] __initdata = {
+static struct platform_device *early_regulators[] __initdata = {
 	&msm_device_saw_s0,
 	&msm_device_saw_s1,
+	&rpm_regulator_early_device,
+};
+
+static struct platform_device *early_devices[] __initdata = {
 #ifdef CONFIG_MSM_BUS_SCALING
 	&msm_bus_apps_fabric,
 	&msm_bus_sys_fabric,
@@ -2034,7 +1913,7 @@ struct ion_platform_heap msm8x60_heaps [] = {
 			.id	= ION_CP_MM_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CP,
 			.name	= ION_MM_HEAP_NAME,
-			.base	= MSM_ION_MM_BASE,
+			.base   = MSM_ION_MM_BASE,
 			.size	= MSM_ION_MM_SIZE,
 			.memory_type = ION_SMI_TYPE,
 			.extra_data = (void *) &cp_mm_ion_pdata,
@@ -2043,8 +1922,8 @@ struct ion_platform_heap msm8x60_heaps [] = {
 			.id	= ION_MM_FIRMWARE_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CARVEOUT,
 			.name	= ION_MM_FIRMWARE_HEAP_NAME,
-			.base	= MSM_ION_MM_FW_BASE,
-			.size	= MSM_ION_MM_FW_SIZE,
+			.size	= MSM_MM_FW_SIZE,
+			.base	= MSM_MM_FW_BASE,
 			.memory_type = ION_SMI_TYPE,
 			.extra_data = (void *) &mm_fw_co_ion_pdata,
 		},
@@ -2052,7 +1931,7 @@ struct ion_platform_heap msm8x60_heaps [] = {
 			.id	= ION_CP_MFC_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CP,
 			.name	= ION_MFC_HEAP_NAME,
-			.base	= MSM_ION_MFC_BASE,
+			.size	= MSM_ION_MFC_BASE,
 			.size	= MSM_ION_MFC_SIZE,
 			.memory_type = ION_SMI_TYPE,
 			.extra_data = (void *) &cp_mfc_ion_pdata,
@@ -2157,9 +2036,6 @@ static struct platform_device *ruby_devices[] __initdata = {
 	&asoc_mvs_dai1,
 #endif
 
-#ifdef CONFIG_BATTERY_MSM
-	&msm_batt_device,
-#endif
 #ifdef CONFIG_ANDROID_PMEM
 #ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
 	&android_pmem_device,
@@ -2239,6 +2115,8 @@ static struct memtype_reserve msm8x60_reserve_table[] __initdata = {
 		.size	=	KERNEL_SMI_SIZE,
 		.flags	=	MEMTYPE_FLAGS_FIXED,
 	},
+	
+	
 	[MEMTYPE_SMI] = {
 	},
 	[MEMTYPE_EBI0] = {
@@ -2272,7 +2150,7 @@ static void __init reserve_ion_memory(void)
 		}
 	}
 
-	msm8x60_reserve_table[MEMTYPE_EBI1].size += msm_ion_sf_size;
+	msm8x60_reserve_table[MEMTYPE_EBI1].size += MSM_ION_SF_SIZE;
 	msm8x60_reserve_table[MEMTYPE_EBI1].size += MSM_ION_CAMERA_SIZE;
 	msm8x60_reserve_table[MEMTYPE_EBI1].size += MSM_ION_WB_SIZE;
 	msm8x60_reserve_table[MEMTYPE_EBI1].size += MSM_ION_AUDIO_SIZE;
@@ -2346,13 +2224,9 @@ static void __init ruby_reserve(void)
 	msm_reserve();
 }
 
-#define EXT_CHG_VALID_MPP 10
-#define EXT_CHG_VALID_MPP_2 11
-
 #define PM_GPIO_CDC_RST_N 20
 #define GPIO_CDC_RST_N PM8058_GPIO_PM_TO_SYS(PM_GPIO_CDC_RST_N)
 
-#if HASTIMPANI
 static struct regulator *vreg_timpani_1;
 static struct regulator *vreg_timpani_2;
 
@@ -2520,21 +2394,6 @@ static struct i2c_board_info msm_i2c_gsbi7_timpani_info[] = {
 		.platform_data = &timpani_pdata,
 	},
 };
-#endif
-
-#ifdef CONFIG_SND_SOC_WM8903
-static struct wm8903_platform_data wm8903_pdata = {
-	.gpio_cfg[2] = 0x3A8,
-};
-
-#define WM8903_I2C_SLAVE_ADDR 0x34
-static struct i2c_board_info wm8903_codec_i2c_info[] = {
-	{
-		I2C_BOARD_INFO("wm8903", WM8903_I2C_SLAVE_ADDR >> 1),
-		.platform_data = &wm8903_pdata,
-	},
-};
-#endif
 
 #ifdef CONFIG_MSM8X60_AUDIO_1X
 static uint32_t msm_spi_gpio[] = {
@@ -3165,10 +3024,12 @@ static void __init ruby_init(void)
 	BUG_ON(msm_rpm_init(&msm8660_rpm_data));
 	BUG_ON(msm_rpmrs_levels_init(&msm_rpmrs_data));
 
-	regulator_suppress_info_printing();
-
 	if (msm_xo_init())
 		pr_err("Failed to initialize XO votes\n");
+
+	regulator_suppress_info_printing();
+
+	platform_add_devices(early_regulators, ARRAY_SIZE(early_regulators));
 	
 	platform_device_register(&rpm_regulator_device);
 
@@ -3222,10 +3083,6 @@ static void __init ruby_init(void)
 		htc_headset_misc_data.ext_accessory_type = USB_AUDIO_OUT;
 		htc_headset_mgr_data.headset_init = ruby_headset_init;
 	}
-
-#ifdef CONFIG_BATTERY_MSM8X60
-        platform_device_register(&msm_charger_device);
-#endif
 
 	if (SOCINFO_VERSION_MAJOR(socinfo_get_version()) != 1)
 		platform_add_devices(msm8660_footswitch,
