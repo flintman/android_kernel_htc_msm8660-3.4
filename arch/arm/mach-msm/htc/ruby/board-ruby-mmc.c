@@ -135,6 +135,10 @@ static unsigned int ruby_wifi_status(struct device *dev)
 }
 #endif
 
+#define MSM_MPM_PIN_SDC4_DAT1	23
+void ruby_remove_wifi(int id, struct mmc_host *mmc);
+void ruby_probe_wifi(int id, struct mmc_host *mmc);
+
 static struct mmc_platform_data ruby_wifi_data = {
 	.ocr_mask	= MMC_VDD_165_195,
 #ifdef CONFIG_TIWLAN_SDIO
@@ -147,6 +151,10 @@ static struct mmc_platform_data ruby_wifi_data = {
 	.msmsdcc_fmid   = 24000000,
 	.msmsdcc_fmax   = 48000000,
 	.nonremovable	= 1,
+	.mpm_sdiowakeup_int = MSM_MPM_PIN_SDC4_DAT1,
+	.board_probe	= ruby_probe_wifi,
+	.board_remove	= ruby_remove_wifi,
+	.ti_sdio	= 1,
 };
 
 #ifdef CONFIG_TIWLAN_SDIO
@@ -192,6 +200,55 @@ int ruby_wifi_reset(int on)
 	printk(KERN_INFO "%s: do nothing\n", __func__);
 	return 0;
 }
+
+static struct mmc_host *wifi_mmc;
+int board_sdio_wifi_enable(unsigned int param);
+int board_sdio_wifi_disable(unsigned int param);
+
+void ruby_probe_wifi(int id, struct mmc_host *mmc)
+{
+	printk("%s: id %d mmc %p\n", __PRETTY_FUNCTION__, id, mmc);
+	wifi_mmc = mmc;
+}
+
+void ruby_remove_wifi(int id, struct mmc_host *mmc)
+{
+	printk("%s: id %d mmc %p\n", __PRETTY_FUNCTION__, id, mmc);
+	wifi_mmc = NULL;
+}
+
+/*
+ *  An API to enable wifi
+ */
+int board_sdio_wifi_enable(unsigned int param)
+{
+	printk(KERN_ERR "board_sdio_wifi_enable\n");
+
+	ruby_wifi_power(1);
+	if (wifi_mmc) {
+		mmc_detect_change(wifi_mmc, msecs_to_jiffies(250));
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(board_sdio_wifi_enable);
+
+/*
+ *  An API to disable wifi
+ */
+int board_sdio_wifi_disable(unsigned int param)
+{
+	printk(KERN_ERR "board_sdio_wifi_disable\n");
+
+	ruby_wifi_power(0);
+
+	if (wifi_mmc) {
+		mmc_detect_change(wifi_mmc, msecs_to_jiffies(100));
+	}
+
+	return 0;
+}
+EXPORT_SYMBOL(board_sdio_wifi_disable);
 
 int __init ruby_init_wifi_mmc()
 {
