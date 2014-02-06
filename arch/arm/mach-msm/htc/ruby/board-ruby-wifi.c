@@ -12,7 +12,6 @@
 #include <linux/wl12xx.h>
 #include <linux/wifi_tiwlan.h>
 #include <linux/ti_wilink_st.h>
-#define WILINK_UART_DEV_NAME "/dev/ttyHS0"
 
 #include "board-ruby.h"
 
@@ -55,7 +54,8 @@ int wilink_resume(struct platform_device *pdev)
 }
 
 static struct ti_st_plat_data wilink_pdata = {
-	.dev_name = WILINK_UART_DEV_NAME,
+	.nshutdown_gpio = 142,
+	.dev_name = "/dev/ttyHS0",
 	.flow_cntrl = 1,
 	.baud_rate = 3000000,
 	.chip_enable = wilink_enable,
@@ -71,7 +71,7 @@ static struct platform_device btwilink_device = {
 	.id = -1,
 };
 
-static struct platform_device wl1271_device = {
+static struct platform_device wl128x_device = {
 	.name   = "kim",
 	.id     = -1,
 	.dev.platform_data = &wilink_pdata,
@@ -83,9 +83,11 @@ static struct wl12xx_platform_data ruby_wlan_data __initdata = {
        .board_tcxo_clock = 1,
 };
 
-extern int ti_wifi_power(int on);
+extern int ruby_wifi_power(int on);
 extern int ruby_wifi_reset(int on);
+#ifdef CONFIG_TIWLAN_SDIO
 extern int ruby_wifi_set_carddetect(int on);
+#endif
 extern int ruby_wifi_get_mac_addr(unsigned char *buf);
 
 #define PREALLOC_WLAN_NUMBER_OF_SECTIONS	4
@@ -148,14 +150,16 @@ static struct resource ruby_wifi_resources[] = {
 		.name		= "device_wifi_irq",
 		.start		= MSM_GPIO_TO_INT(RUBY_GPIO_WIFI_IRQ),
 		.end		= MSM_GPIO_TO_INT(RUBY_GPIO_WIFI_IRQ),
-		.flags		= IORESOURCE_IRQ | IORESOURCE_IRQ_LOWEDGE,
+		.flags      = IORESOURCE_IRQ | IORESOURCE_IRQ_LOWEDGE,
 	},
 };
 
 static struct wifi_platform_data ruby_wifi_control = {
-	.set_power      = ti_wifi_power,
+	.set_power      = ruby_wifi_power,
 	.set_reset      = ruby_wifi_reset,
+#ifdef CONFIG_TIWLAN_SDIO
 	.set_carddetect = ruby_wifi_set_carddetect,
+#endif
 	.mem_prealloc   = ruby_wifi_mem_prealloc,
 };
 
@@ -174,11 +178,10 @@ int __init ruby_wifi_init(void)
 	int ret;
 	printk(KERN_INFO "%s: start\n", __func__);
 
-	platform_device_register(&wl1271_device);
+	platform_device_register(&wl128x_device);
 	platform_device_register(&btwilink_device);
 
 	ruby_init_wifi_mem();
-
 	ret = platform_device_register(&ruby_wifi_device);
 
 	if(wl12xx_set_platform_data(&ruby_wlan_data))

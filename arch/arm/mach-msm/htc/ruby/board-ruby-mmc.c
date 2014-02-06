@@ -81,7 +81,25 @@ static void config_gpio_table(uint32_t *table, int len)
 	}
 }
 
+#ifdef CONFIG_TIWLAN_SDIO
+static struct sdio_embedded_func wifi_func_array[] = {
+	{
+		.f_class        = SDIO_CLASS_NONE,
+		.f_maxblksize   = 512,
+	},
+	{
+		.f_class        = SDIO_CLASS_WLAN,
+		.f_maxblksize   = 512,
+	},
+};
+
 static struct embedded_sdio_data ruby_wifi_emb_data = {
+	.cis    = {
+		.vendor         = SDIO_VENDOR_ID_TI,
+		.device         = SDIO_DEVICE_ID_TI_WL12xx,
+		.blksize        = 512,
+		.max_dtr        = 25000000,
+	},
 	.cccr   = {
 		.multi_block	= 1,
 		.low_speed	= 0,
@@ -90,6 +108,8 @@ static struct embedded_sdio_data ruby_wifi_emb_data = {
 		.high_speed	= 0,
 		.disable_cd	= 1,
 	},
+	.funcs  = wifi_func_array,
+	.num_funcs = 2,
 };
 
 static void (*wifi_status_cb)(int card_present, void *dev_id);
@@ -113,12 +133,15 @@ static unsigned int ruby_wifi_status(struct device *dev)
 {
 	return ruby_wifi_cd;
 }
+#endif
 
 static struct mmc_platform_data ruby_wifi_data = {
 	.ocr_mask	= MMC_VDD_165_195,
-	.status		= ruby_wifi_status,
+#ifdef CONFIG_TIWLAN_SDIO
+	.status			= ruby_wifi_status,
 	.register_status_notify	= ruby_wifi_status_register,
-	.embedded_sdio	= &ruby_wifi_emb_data,
+	.embedded_sdio		= &ruby_wifi_emb_data,
+#endif
 	.mmc_bus_width	= MMC_CAP_4_BIT_DATA,
 	.msmsdcc_fmin   = 400000,
 	.msmsdcc_fmid   = 24000000,
@@ -126,6 +149,7 @@ static struct mmc_platform_data ruby_wifi_data = {
 	.nonremovable	= 1,
 };
 
+#ifdef CONFIG_TIWLAN_SDIO
 int ruby_wifi_set_carddetect(int val)
 {
 	printk(KERN_INFO "%s: %d\n", __func__, val);
@@ -137,8 +161,9 @@ int ruby_wifi_set_carddetect(int val)
 	return 0;
 }
 EXPORT_SYMBOL(ruby_wifi_set_carddetect);
+#endif
 
-int ti_wifi_power(int on)
+int ruby_wifi_power(int on)
 {
 	const unsigned SDC4_HDRV_PULL_CTL_ADDR = (unsigned) MSM_TLMM_BASE + 0x20A0;
 
@@ -160,7 +185,7 @@ int ti_wifi_power(int on)
 	mdelay(120);
 	return 0;
 }
-EXPORT_SYMBOL(ti_wifi_power);
+EXPORT_SYMBOL(ruby_wifi_power);
 
 int ruby_wifi_reset(int on)
 {
@@ -172,6 +197,9 @@ int __init ruby_init_wifi_mmc()
 {
 	uint32_t id;
 	const unsigned SDC4_HDRV_PULL_CTL_ADDR = (unsigned)(MSM_TLMM_BASE + 0x20A0);
+#ifdef CONFIG_TIWLAN_SDIO
+	wifi_status_cb = NULL;
+#endif
 
 	printk(KERN_INFO "ruby: %s\n", __func__);
 
