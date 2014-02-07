@@ -12,7 +12,11 @@
 #ifndef __Q6_ASM_H__
 #define __Q6_ASM_H__
 
+#ifdef CONFIG_MSM8X60_AUDIO_1X
+#include <mach/qdsp6v2_1x/apr.h>
+#else
 #include <mach/qdsp6v2/apr.h>
+#endif
 #include <sound/apr_audio.h>
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
 #include <linux/msm_ion.h>
@@ -164,6 +168,10 @@ struct audio_client {
 	uint64_t         time_stamp;
 	atomic_t         cmd_response;
 	bool             perf_mode;
+};
+
+struct q6asm_ops {
+	int (*get_q6_effect) (void);
 };
 
 void q6asm_audio_client_free(struct audio_client *ac);
@@ -349,5 +357,11 @@ int q6asm_get_apr_service_id(int session_id);
 /* Common format block without any payload
 */
 int q6asm_media_format_block(struct audio_client *ac, uint32_t format);
+
+int q6asm_enable_effect(struct audio_client *ac, uint32_t module_id,
+			uint32_t param_id, uint32_t payload_size,
+			void *payload);
+
+void htc_register_q6asm_ops(struct q6asm_ops *ops);
 
 #endif /* __Q6_ASM_H__ */

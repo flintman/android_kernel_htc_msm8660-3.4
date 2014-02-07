@@ -17,7 +17,11 @@
 #define _APR_AUDIO_H_
 
 /* ASM opcodes without APR payloads*/
+#ifdef CONFIG_MSM8X60_AUDIO_1X
+#include <mach/qdsp6v2_1x/apr.h>
+#else
 #include <mach/qdsp6v2/apr.h>
+#endif
 
 /*
  * Audio Front End (AFE)
@@ -618,6 +622,10 @@ struct adm_cmd_memory_unmap_regions{
 #define VPM_TX_SM_ECNS_COPP_TOPOLOGY			0x00010F71
 #define VPM_TX_DM_FLUENCE_COPP_TOPOLOGY			0x00010F72
 #define VPM_TX_QMIC_FLUENCE_COPP_TOPOLOGY		0x00010F75
+
+#define HTC_STEREO_RECORD_TOPOLOGY			0x10000000
+#define HTC_COPP_TOPOLOGY				0x10000001
+#define HTC_POPP_TOPOLOGY				0x10000002
 
 #define LOWLATENCY_POPP_TOPOLOGY			0x00010C68
 #define LOWLATENCY_COPP_TOPOLOGY			0x00010312

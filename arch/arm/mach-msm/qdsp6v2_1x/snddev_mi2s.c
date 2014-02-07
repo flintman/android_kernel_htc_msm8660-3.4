@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -8,11 +8,6 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
  *
  */
 #include <linux/module.h>
@@ -25,17 +20,15 @@
 #include <asm/uaccess.h>
 #include <mach/board.h>
 #include <mach/qdsp6v2_1x/audio_dev_ctl.h>
-#include <mach/qdsp6v2_1x/apr_audio.h>
-#include <mach/qdsp6v2_1x/q6afe.h>
+#include <sound/q6afe.h>
+#include <sound/apr_audio.h>
 #include "snddev_mi2s.h"
 
-#define SNDDEV_MI2S_PCM_SZ 32 /* 16 bit / sample stereo mode */
-#define SNDDEV_MI2S_MUL_FACTOR 3 /* Multi by 8 Shift by 3  */
+#define SNDDEV_MI2S_PCM_SZ 32 
+#define SNDDEV_MI2S_MUL_FACTOR 3 
 #define SNDDEV_MI2S_CLK_RATE(freq) \
 	(((freq) * (SNDDEV_MI2S_PCM_SZ)) << (SNDDEV_MI2S_MUL_FACTOR))
 
-
-/* Global state for the driver */
 struct snddev_mi2s_drv_state {
 
 	struct clk *tx_osrclk;
@@ -104,7 +97,7 @@ static int mi2s_get_gpios(struct platform_device *pdev)
 	int rc = 0;
 	struct resource *res;
 
-	/* Claim all of the GPIOs. */
+	
 	res = platform_get_resource_byname(pdev, IORESOURCE_IO, "mi2s_ws");
 	if (!res) {
 		pr_err("%s: failed to get gpio MI2S_WS\n", __func__);
@@ -146,8 +139,6 @@ static int mi2s_fm_probe(struct platform_device *pdev)
 {
 	int rc = 0;
 
-	pr_info("%s:\n", __func__);
-
 	rc = mi2s_get_gpios(pdev);
 	if (rc < 0) {
 		pr_err("%s: GPIO configuration failed\n", __func__);
@@ -183,16 +174,15 @@ static int snddev_mi2s_open(struct msm_snddev_info *dev_info)
 	u8 channels;
 	u8 num_of_sd_lines = 0;
 	struct snddev_mi2s_drv_state *drv = &snddev_mi2s_drv;
-	struct snddev_mi2s_data *snddev_mi2s_data;
+	struct snddev_mi2s_data *snddev_mi2s_data = dev_info->private_data;
 
 	if (!dev_info) {
 		pr_err("%s:  msm_snddev_info is null\n", __func__);
 		return -EINVAL;
 	}
 
-	snddev_mi2s_data = dev_info->private_data;
-	/* set up osr clk */
-	drv->tx_osrclk = clk_get(0, "mi2s_osr_clk");
+	
+	drv->tx_osrclk = clk_get_sys(NULL, "mi2s_osr_clk");
 	if (IS_ERR(drv->tx_osrclk))
 		pr_err("%s master clock Error\n", __func__);
 
@@ -204,15 +194,15 @@ static int snddev_mi2s_open(struct msm_snddev_info *dev_info)
 	}
 	clk_prepare_enable(drv->tx_osrclk);
 
-	/* set up bit clk */
-	drv->tx_bitclk = clk_get(0, "mi2s_bit_clk");
+	
+	drv->tx_bitclk = clk_get_sys(NULL, "mi2s_bit_clk");
 	if (IS_ERR(drv->tx_bitclk))
 		pr_err("%s clock Error\n", __func__);
 
 	rc =  clk_set_rate(drv->tx_bitclk, 8);
 	if (IS_ERR_VALUE(rc)) {
 		pr_err("ERROR setting bit clock\n");
-		clk_disable(drv->tx_osrclk);
+		clk_disable_unprepare(drv->tx_osrclk);
 		return -ENODEV;
 	}
 	clk_prepare_enable(drv->tx_bitclk);
@@ -321,6 +311,8 @@ static int snddev_mi2s_open(struct msm_snddev_info *dev_info)
 		goto error_invalid_data;
 	}
 	afe_config.mi2s.ws = 1;
+	afe_config.mi2s.format = MSM_AFE_I2S_FORMAT_LPCM;
+
 	rc = afe_open(snddev_mi2s_data->copp_id, &afe_config,
 		dev_info->sample_rate);
 
@@ -329,7 +321,7 @@ static int snddev_mi2s_open(struct msm_snddev_info *dev_info)
 		goto error_invalid_data;
 	}
 
-	/*enable fm gpio here*/
+	
 	rc = mi2s_gpios_request();
 	if (rc < 0) {
 		pr_err("%s: GPIO request failed\n", __func__);
@@ -351,13 +343,13 @@ static int snddev_mi2s_close(struct msm_snddev_info *dev_info)
 {
 
 	struct snddev_mi2s_drv_state *mi2s_drv = &snddev_mi2s_drv;
-	struct snddev_mi2s_data *snddev_mi2s_data;
+	struct snddev_mi2s_data *snddev_mi2s_data = dev_info->private_data;
 
 	if (!dev_info) {
 		pr_err("%s:  msm_snddev_info is null\n", __func__);
 		return -EINVAL;
 	}
-	snddev_mi2s_data = dev_info->private_data;
+
 	if (!dev_info->opened) {
 		pr_err(" %s: calling close device with out opening the"
 		       " device\n", __func__);
@@ -416,7 +408,6 @@ static int snddev_mi2s_probe(struct platform_device *pdev)
 	dev_info->sample_rate = pdata->sample_rate;
 	msm_snddev_register(dev_info);
 
-	pr_info("%s: probe done for %s\n", __func__, pdata->name);
 	return rc;
 }
 
@@ -442,8 +433,6 @@ static int __init snddev_mi2s_init(void)
 		pr_err("%s: platform_driver_register failed\n", __func__);
 		goto error_platform_driver;
 	}
-
-	pr_info("snddev_mi2s_init : done\n");
 
 	return rc;
 

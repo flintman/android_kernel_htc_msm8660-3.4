@@ -13,7 +13,7 @@
 #include <linux/platform_device.h>
 #include <linux/err.h>
 #include <mach/qdsp6v2_1x/audio_dev_ctl.h>
-#include <mach/qdsp6v2_1x/q6afe.h>
+#include <sound/q6afe.h>
 #include <linux/slab.h>
 #include "snddev_virtual.h"
 

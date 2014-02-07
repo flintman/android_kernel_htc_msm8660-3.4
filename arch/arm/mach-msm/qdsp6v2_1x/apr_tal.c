@@ -8,11 +8,6 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
  */
 
 #include <linux/kernel.h>
@@ -29,9 +24,9 @@
 #include <linux/debugfs.h>
 #include <linux/platform_device.h>
 #include <linux/delay.h>
-#include <mach/msm_smd.h>
 #include <linux/clk.h>
-#include "apr_tal.h"
+#include <mach/msm_smd.h>
+#include <mach/qdsp6v2_1x/apr_tal.h>
 
 static char *svc_names[APR_DEST_MAX][APR_CLIENT_MAX] = {
 	{
@@ -170,9 +165,9 @@ struct apr_svc_ch_dev *apr_tal_open(uint32_t svc, uint32_t dest,
 			apr_svc_ch[dl][dest][svc].dest_state,
 				msecs_to_jiffies(APR_OPEN_TIMEOUT_MS));
 		if (rc == 0) {
-			pr_err("%s: TIMEOUT for dest %d svc %d\n", __func__, dest, svc);
+			pr_err("apr_tal:open timeout\n");
 			mutex_unlock(&apr_svc_ch[dl][dest][svc].m_lock);
-			BUG();
+			return NULL;
 		}
 		pr_debug("apr_tal:Wakeup done\n");
 		apr_svc_ch[dl][dest][svc].dest_state = 0;
@@ -193,7 +188,6 @@ struct apr_svc_ch_dev *apr_tal_open(uint32_t svc, uint32_t dest,
 		pr_err("apr_tal:TIMEOUT for OPEN event\n");
 		mutex_unlock(&apr_svc_ch[dl][dest][svc].m_lock);
 		apr_tal_close(&apr_svc_ch[dl][dest][svc]);
-		BUG();
 		return NULL;
 	}
 	if (!apr_svc_ch[dl][dest][svc].dest_state) {
@@ -240,15 +234,13 @@ static int apr_smd_probe(struct platform_device *pdev)
 		wake_up(&apr_svc_ch[APR_DL_SMD][dest][clnt].dest);
 	} else if (pdev->id == APR_DEST_QDSP6) {
 		pr_info("apr_tal:Q6 Is Up\n");
-/*
-		local_src_disable(PLL_4);
-*/
 		dest = APR_DEST_QDSP6;
 		clnt = APR_CLIENT_AUDIO;
 		apr_svc_ch[APR_DL_SMD][dest][clnt].dest_state = 1;
 		wake_up(&apr_svc_ch[APR_DL_SMD][dest][clnt].dest);
 	} else
 		pr_err("apr_tal:Invalid Dest Id: %d\n", pdev->id);
+
 	return 0;
 }
 

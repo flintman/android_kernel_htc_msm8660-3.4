@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2009 Google, Inc.
  * Copyright (C) 2009 HTC Corporation
- * Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+ * Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This software is licensed under the terms of the GNU General Public
  * License version 2, as published by the Free Software Foundation, and
@@ -23,15 +23,14 @@
 #include <linux/spinlock.h>
 #include <linux/slab.h>
 #include <linux/wait.h>
-#include <linux/msm_audio_8X60.h>
+#include <linux/msm_audio.h>
 #include <linux/pm_qos.h>
 
 #include <asm/atomic.h>
 #include <mach/debug_mm.h>
 #include <mach/qdsp6v2_1x/audio_dev_ctl.h>
-#include <mach/qdsp6v2_1x/apr_audio.h>
-#include <mach/qdsp6v2_1x/q6asm.h>
-#include <linux/rtc.h>
+#include <sound/q6asm.h>
+#include <sound/apr_audio.h>
 #include <linux/wakelock.h>
 #include <mach/cpuidle.h>
 
@@ -62,8 +61,6 @@ struct pcm {
 	struct pm_qos_request pm_qos_req;
 };
 
-static atomic_t pcm_opened = ATOMIC_INIT(0);
-
 static void pcm_in_get_dsp_buffers(struct pcm*,
 				uint32_t token, uint32_t *payload);
 
@@ -78,13 +75,15 @@ void pcm_in_cb(uint32_t opcode, uint32_t token,
 	case ASM_DATA_EVENT_READ_DONE:
 		pcm_in_get_dsp_buffers(pcm, token, payload);
 		break;
+	case RESET_EVENTS:
+		reset_device();
+		break;
 	default:
 		break;
 	}
 	spin_unlock_irqrestore(&pcm->dsp_lock, flags);
 }
-
-static void audio_prevent_sleep(struct pcm *audio)
+static void pcm_in_prevent_sleep(struct pcm *audio)
 {
 	pr_debug("%s:\n", __func__);
 	wake_lock(&audio->wakelock);
@@ -92,7 +91,7 @@ static void audio_prevent_sleep(struct pcm *audio)
 			      msm_cpuidle_get_deep_idle_latency());
 }
 
-static void audio_allow_sleep(struct pcm *audio)
+static void pcm_in_allow_sleep(struct pcm *audio)
 {
 	pr_debug("%s:\n", __func__);
 	pm_qos_update_request(&audio->pm_qos_req, PM_QOS_DEFAULT_VALUE);
@@ -193,8 +192,7 @@ static long pcm_in_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 			rc = -EFAULT;
 			break;
 		}
-
-		audio_prevent_sleep(pcm);
+		pcm_in_prevent_sleep(pcm);
 		atomic_set(&pcm->in_enabled, 1);
 
 		while (cnt++ < pcm->buffer_count)
@@ -281,14 +279,12 @@ static long pcm_in_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		if (enable_mask & FLUENCE_ENABLE)
 			rc = auddev_cfg_tx_copp_topology(pcm->ac->session,
 					VPM_TX_DM_FLUENCE_COPP_TOPOLOGY);
-		else if (enable_mask & STEREO_RECORD_ENABLE)
-			rc = auddev_cfg_tx_copp_topology(pcm->ac->session,
-					HTC_STEREO_RECORD_TOPOLOGY);
 		else
 			rc = auddev_cfg_tx_copp_topology(pcm->ac->session,
 					DEFAULT_COPP_TOPOLOGY);
 		break;
 	}
+
 	case AUDIO_SET_INCALL: {
 		if (copy_from_user(&pcm->rec_mode,
 				   (void *) arg,
@@ -313,7 +309,6 @@ static long pcm_in_ioctl(struct file *file, unsigned int cmd, unsigned long arg)
 		break;
 	}
 
-
 	default:
 		rc = -EINVAL;
 		break;
@@ -326,13 +321,7 @@ static int pcm_in_open(struct inode *inode, struct file *file)
 {
 	struct pcm *pcm;
 	int rc = 0;
-	struct timespec ts;
-	struct rtc_time tm;
-
-	if (atomic_cmpxchg(&pcm_opened, 0, 1) != 0) {
-		rc = -EBUSY;
-		return rc;
-	}
+	char name[24];
 
 	pcm = kzalloc(sizeof(struct pcm), GFP_KERNEL);
 	if (!pcm)
@@ -365,28 +354,21 @@ static int pcm_in_open(struct inode *inode, struct file *file)
 	atomic_set(&pcm->in_enabled, 0);
 	atomic_set(&pcm->in_count, 0);
 	atomic_set(&pcm->in_opened, 1);
-	wake_lock_init(&pcm->wakelock, WAKE_LOCK_SUSPEND, "audio_pcm_in");
+	snprintf(name, sizeof name, "pcm_in_%x", pcm->ac->session);
+	wake_lock_init(&pcm->wakelock, WAKE_LOCK_SUSPEND, name);
+	snprintf(name, sizeof name, "pcm_in_idle_%x", pcm->ac->session);
 	pm_qos_add_request(&pcm->pm_qos_req, PM_QOS_CPU_DMA_LATENCY,
 				PM_QOS_DEFAULT_VALUE);
 
 	pcm->rec_mode = VOC_REC_NONE;
 
 	file->private_data = pcm;
-	getnstimeofday(&ts);
-	rtc_time_to_tm(ts.tv_sec, &tm);
-	pr_info("[ATS][start_recording][successful] at %lld \
-		(%d-%02d-%02d %02d:%02d:%02d.%09lu UTC)\n",
-		ktime_to_ns(ktime_get()),
-		tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-		tm.tm_hour, tm.tm_min, tm.tm_sec, ts.tv_nsec);
 	pr_info("%s: pcm in open session id[%d]\n", __func__, pcm->ac->session);
-
 	return 0;
 fail:
 	if (pcm->ac)
 		q6asm_audio_client_free(pcm->ac);
 	kfree(pcm);
-	atomic_set(&pcm_opened, 0);
 	return rc;
 }
 
@@ -442,17 +424,17 @@ static ssize_t pcm_in_read(struct file *file, char __user *buf,
 			count -= len;
 			buf += len;
 		}
-			atomic_dec(&pcm->in_count);
-			memset(&pcm->in_frame_info[idx], 0,
+		atomic_dec(&pcm->in_count);
+		memset(&pcm->in_frame_info[idx], 0,
 						sizeof(uint32_t) * 2);
 
-			rc = q6asm_read(pcm->ac);
-			if (rc < 0) {
-				pr_err("%s q6asm_read faile\n", __func__);
+		rc = q6asm_read(pcm->ac);
+		if (rc < 0) {
+			pr_err("%s q6asm_read fail\n", __func__);
 				goto fail;
-			}
-			rmb();
-			break;
+		}
+		rmb();
+		break;
 	}
 	rc = buf-start;
 fail:
@@ -463,16 +445,11 @@ fail:
 static int pcm_in_release(struct inode *inode, struct file *file)
 {
 	int rc = 0;
-	struct timespec ts;
-	struct rtc_time tm;
 	struct pcm *pcm = file->private_data;
 
-	if (pcm == NULL) {
-		pr_err("%s: Nothing need to be released.\n", __func__);
-		return 0;
-	}
-	if (pcm->ac) {
-		mutex_lock(&pcm->lock);
+	pr_info("[%s:%s] release session id[%d]\n", __MM_FILE__,
+		__func__, pcm->ac->session);
+	mutex_lock(&pcm->lock);
 
 	if ((pcm->rec_mode != VOC_REC_NONE) && atomic_read(&pcm->in_enabled)) {
 		msm_disable_incall_recording(pcm->ac->session, pcm->rec_mode);
@@ -480,32 +457,18 @@ static int pcm_in_release(struct inode *inode, struct file *file)
 		pcm->rec_mode = VOC_REC_NONE;
 	}
 
-		/* remove this session from topology list */
-		auddev_cfg_tx_copp_topology(pcm->ac->session,
+	
+	auddev_cfg_tx_copp_topology(pcm->ac->session,
 				DEFAULT_COPP_TOPOLOGY);
-		mutex_unlock(&pcm->lock);
-	}
+	mutex_unlock(&pcm->lock);
 
 	rc = pcm_in_disable(pcm);
-	if (pcm->ac) {
-		pr_info("[%s:%s] release session id[%d]\n", __MM_FILE__,
-				__func__, pcm->ac->session);
-		msm_clear_session_id(pcm->ac->session);
-		q6asm_audio_client_free(pcm->ac);
-	}
-
-	audio_allow_sleep(pcm);
+	 msm_clear_session_id(pcm->ac->session);
+	q6asm_audio_client_free(pcm->ac);
+	pcm_in_allow_sleep(pcm);
 	wake_lock_destroy(&pcm->wakelock);
 	pm_qos_remove_request(&pcm->pm_qos_req);
 	kfree(pcm);
-	getnstimeofday(&ts);
-	rtc_time_to_tm(ts.tv_sec, &tm);
-	atomic_set(&pcm_opened, 0);
-	pr_info("[ATS][stop_recording][successful] at %lld \
-		(%d-%02d-%02d %02d:%02d:%02d.%09lu UTC)\n",
-		ktime_to_ns(ktime_get()),
-		tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday,
-		tm.tm_hour, tm.tm_min, tm.tm_sec, ts.tv_nsec);
 	return rc;
 }
 

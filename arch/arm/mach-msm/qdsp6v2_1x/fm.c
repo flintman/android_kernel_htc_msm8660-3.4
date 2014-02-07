@@ -36,7 +36,7 @@
 #include <asm/ioctls.h>
 #include <mach/msm_adsp.h>
 #include <mach/qdsp6v2_1x/audio_dev_ctl.h>
-#include <mach/qdsp6v2_1x/q6afe.h>
+#include <sound/q6afe.h>
 
 #define SESSION_ID_FM  (MAX_SESSIONS + 1)
 #define FM_ENABLE	0x1
@@ -59,6 +59,7 @@ struct audio {
 	uint16_t volume;
 };
 
+
 static struct audio fm_audio;
 static int fm_audio_enable(struct audio *audio)
 {
@@ -66,9 +67,9 @@ static int fm_audio_enable(struct audio *audio)
 		return 0;
 
 	pr_info("%s: fm dest= %08x fm_source = %08x\n", __func__,
-			audio->fm_dst_copp_id, audio->fm_src_copp_id);
+		audio->fm_dst_copp_id, audio->fm_src_copp_id);
 
-	/* do afe loopback here */
+	
 
 	if (audio->fm_dest && audio->fm_source) {
 		if (afe_loopback(FM_ENABLE, audio->fm_dst_copp_id,
@@ -100,8 +101,10 @@ static void fm_audio_listner(u32 evt_id, union auddev_evt_data *evt_payload,
 
 		if (audio->enabled &&
 			audio->fm_dest &&
-			audio->fm_source && !audio->running) {
+			audio->fm_source) {
 
+			afe_loopback_gain(audio->fm_src_copp_id,
+						audio->volume);
 			afe_loopback(FM_ENABLE, audio->fm_dst_copp_id,
 						audio->fm_src_copp_id);
 			audio->running = 1;
@@ -114,7 +117,7 @@ static void fm_audio_listner(u32 evt_id, union auddev_evt_data *evt_payload,
 		else
 			audio->fm_dest = 0;
 		if (audio->running
-			&& (!audio->fm_dest && !audio->fm_source)) {
+			&& (!audio->fm_dest || !audio->fm_source)) {
 			afe_loopback(FM_DISABLE, audio->fm_dst_copp_id,
 						audio->fm_src_copp_id);
 			audio->running = 0;
@@ -140,7 +143,7 @@ static void fm_audio_listner(u32 evt_id, union auddev_evt_data *evt_payload,
 static int fm_audio_disable(struct audio *audio)
 {
 
-	/* break the AFE loopback here */
+	
 	afe_loopback(FM_DISABLE, audio->fm_dst_copp_id, audio->fm_src_copp_id);
 	return 0;
 }
@@ -203,7 +206,7 @@ static int fm_audio_open(struct inode *inode, struct file *file)
 	if (audio->opened)
 		return -EPERM;
 
-	/* Allocate the decoder */
+	
 	audio->dec_id = SESSION_ID_FM;
 
 	audio->running = 0;

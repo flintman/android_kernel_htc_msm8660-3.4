@@ -1,4 +1,4 @@
-/* Copyright (c) 2010-2011, Code Aurora Forum. All rights reserved.
+/* Copyright (c) 2010-2012, Code Aurora Forum. All rights reserved.
  *
  * This program is free software; you can redistribute it and/or modify
  * it under the terms of the GNU General Public License version 2 and
@@ -8,11 +8,6 @@
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
- * 02110-1301, USA.
  *
  */
 #include <linux/module.h>
@@ -27,25 +22,20 @@
 #include <asm/io.h>
 #include <mach/clk.h>
 #include <mach/qdsp6v2_1x/audio_dev_ctl.h>
-#include <mach/qdsp6v2_1x/apr_audio.h>
-#include <mach/qdsp6v2_1x/snddev_ecodec.h>
-
-#include <mach/qdsp6v2_1x/q6afe.h>
+#include <sound/apr_audio.h>
+#include <sound/q6afe.h>
+#include "snddev_ecodec.h"
 
 #define ECODEC_SAMPLE_RATE 8000
-static struct q6v2audio_ecodec_ops default_audio_ops;
-static struct q6v2audio_ecodec_ops *audio_ops = &default_audio_ops;
 
-/* Context for each external codec device */
 struct snddev_ecodec_state {
 	struct snddev_ecodec_data *data;
 	u32 sample_rate;
 };
 
-/* Global state for the driver */
 struct snddev_ecodec_drv_state {
 	struct mutex dev_lock;
-	int ref_cnt;		/* ensure one rx device at a time */
+	int ref_cnt;		
 	struct clk *ecodec_clk;
 };
 
@@ -63,18 +53,20 @@ static struct aux_pcm_state the_aux_pcm_state;
 static int aux_pcm_gpios_request(void)
 {
 	int rc = 0;
+
 	uint32_t bt_config_gpio[] = {
 		GPIO_CFG(the_aux_pcm_state.dout, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 		GPIO_CFG(the_aux_pcm_state.din, 1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 		GPIO_CFG(the_aux_pcm_state.syncout, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 		GPIO_CFG(the_aux_pcm_state.clkin_a, 1, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 	};
-	pr_debug("%s\n", __func__);
+
 	gpio_tlmm_config(bt_config_gpio[0], GPIO_CFG_ENABLE);
 	gpio_tlmm_config(bt_config_gpio[1], GPIO_CFG_ENABLE);
 	gpio_tlmm_config(bt_config_gpio[2], GPIO_CFG_ENABLE);
 	gpio_tlmm_config(bt_config_gpio[3], GPIO_CFG_ENABLE);
-
+	
+	pr_debug("%s\n", __func__);
 	return rc;
 }
 
@@ -86,11 +78,12 @@ static void aux_pcm_gpios_free(void)
 		GPIO_CFG(the_aux_pcm_state.syncout, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 		GPIO_CFG(the_aux_pcm_state.clkin_a, 0, GPIO_CFG_OUTPUT, GPIO_CFG_NO_PULL, GPIO_CFG_2MA),
 	};
-	pr_debug("%s\n", __func__);
 	gpio_tlmm_config(bt_config_gpio[0], GPIO_CFG_DISABLE);
 	gpio_tlmm_config(bt_config_gpio[1], GPIO_CFG_DISABLE);
 	gpio_tlmm_config(bt_config_gpio[2], GPIO_CFG_DISABLE);
 	gpio_tlmm_config(bt_config_gpio[3], GPIO_CFG_DISABLE);
+	
+	pr_debug("%s\n", __func__);
 }
 
 static int get_aux_pcm_gpios(struct platform_device *pdev)
@@ -98,7 +91,7 @@ static int get_aux_pcm_gpios(struct platform_device *pdev)
 	int rc = 0;
 	struct resource *res;
 
-	/* Claim all of the GPIOs. */
+	
 	res = platform_get_resource_byname(pdev, IORESOURCE_IO, "aux_pcm_dout");
 	if (!res) {
 		pr_err("%s: failed to get gpio AUX PCM DOUT\n", __func__);
@@ -145,7 +138,6 @@ static int aux_pcm_probe(struct platform_device *pdev)
 	int rc = 0;
 
 	pr_info("%s:\n", __func__);
-
 	rc = get_aux_pcm_gpios(pdev);
 	if (rc < 0) {
 		pr_err("%s: GPIO configuration failed\n", __func__);
@@ -284,11 +276,6 @@ error:
 	return rc;
 }
 
-void htc_8x60_register_ecodec_ops(struct q6v2audio_ecodec_ops *ops)
-{
-	audio_ops = ops;
-}
-
 static int snddev_ecodec_probe(struct platform_device *pdev)
 {
 	int rc = 0;
@@ -331,7 +318,7 @@ static int snddev_ecodec_probe(struct platform_device *pdev)
 	msm_snddev_register(dev_info);
 
 	ecodec->data = pdata;
-	ecodec->sample_rate = ECODEC_SAMPLE_RATE;	/* Default to 8KHz */
+	ecodec->sample_rate = ECODEC_SAMPLE_RATE;	
 error:
 	return rc;
 }
@@ -351,7 +338,7 @@ int __init snddev_ecodec_init(void)
 	mutex_init(&drv->dev_lock);
 	drv->ref_cnt = 0;
 
-	drv->ecodec_clk = clk_get(NULL, "pcm_clk");
+	drv->ecodec_clk = clk_get_sys(NULL, "pcm_clk");
 	if (IS_ERR(drv->ecodec_clk)) {
 		pr_err("%s: could not get pcm_clk\n", __func__);
 		return PTR_ERR(drv->ecodec_clk);
@@ -370,6 +357,7 @@ int __init snddev_ecodec_init(void)
 				__func__);
 		goto error_ecodec_platform_driver;
 	}
+
 	pr_info("%s: done\n", __func__);
 
 	return 0;
