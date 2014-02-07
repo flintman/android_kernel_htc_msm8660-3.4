@@ -15,33 +15,30 @@
 
 #include <linux/android_pmem.h>
 #include <linux/mfd/pmic8058.h>
-#include <linux/mfd/marimba.h>
 #include <linux/delay.h>
 #include <linux/pmic8058-othc.h>
-#include <linux/regulator/consumer.h>
 #include <linux/spi_aic3254.h>
-
+#include <linux/regulator/consumer.h>
 #include <linux/gpio.h>
+
 #include <mach/gpio.h>
 #include <mach/dal.h>
 #include <linux/tpa2051d3.h>
-#include <mach/qdsp6v2_1x/snddev_icodec.h>
-#include <mach/qdsp6v2_1x/snddev_ecodec.h>
-#include <mach/qdsp6v2_1x/snddev_hdmi.h>
-#include <mach/qdsp6v2_1x/apr_audio.h>
-#include <mach/qdsp6v2_1x/q6asm.h>
+#include "qdsp6v2_1x/snddev_icodec.h"
+#include "qdsp6v2_1x/snddev_ecodec.h"
+#include "qdsp6v2_1x/snddev_hdmi.h"
+#include <mach/qdsp6v2_1x/audio_dev_ctl.h>
+#include <sound/apr_audio.h>
+#include <sound/q6asm.h>
 #include <mach/htc_acoustic_8x60.h>
+#include <mach/board_htc.h>
 
 #include "board-ruby.h"
 #include "board-ruby-audio-data.h"
-#include <mach/qdsp6v2_1x/audio_dev_ctl.h>
 
 #define PM8058_GPIO_BASE					NR_MSM_GPIOS
 #define PM8058_GPIO_PM_TO_SYS(pm_gpio)		(pm_gpio + PM8058_GPIO_BASE)
 
-extern unsigned int system_rev;
-
-static struct mutex bt_sco_lock;
 static struct mutex mic_lock;
 static int curr_rx_mode;
 static atomic_t aic3254_ctl = ATOMIC_INIT(0);
@@ -52,14 +49,12 @@ static atomic_t aic3254_ctl = ATOMIC_INIT(0);
 #define BIT_FM_SPK	(1 << 3)
 #define BIT_FM_HS	(1 << 4)
 
-/* function prototype */
 void ruby_snddev_bmic_pamp_on(int);
 
 static uint32_t msm_codec_reset_gpio[] = {
-	/* AIC3254 Reset */
 	GPIO_CFG(RUBY_AUD_CODEC_RST, 0, GPIO_CFG_OUTPUT,
 		GPIO_CFG_PULL_UP, GPIO_CFG_8MA),
-	/* Timpani Reset */
+
 	GPIO_CFG(RUBY_AUD_QTR_RESET, 0, GPIO_CFG_OUTPUT,
 		GPIO_CFG_PULL_UP, GPIO_CFG_8MA),
 };
@@ -134,12 +129,6 @@ void ruby_snddev_receiver_pamp_on(int en)
 	}
 }
 
-void ruby_snddev_bt_sco_pamp_on(int en)
-{
-	/* to be implemented */
-}
-
-/* power on/off externnal mic bias */
 static struct regulator *vreg_l2;
 void ruby_mic_enable(int en, int shift)
 {
@@ -194,13 +183,12 @@ vreg_fail:
 
 static struct regulator *vreg_l5 = NULL;
 
-/* To avoid TX no sound when enter suspend */
 void ruby_snddev_tx_pamp_on(int en)
 {
 	int rc = 0;
 	int call_state = 0;
 
-	call_state = msm_get_call_state(); /* check if incall */
+	call_state = msm_get_call_state();
 
 	if (!call_state)
 		return;
@@ -246,7 +234,6 @@ void ruby_snddev_imic_pamp_on(int en)
 			pr_err("%s: Enabling int mic power failed\n", __func__);
 	}
 
-	/* power up second mic at same time becuase don't support separate scenario */
 	ruby_snddev_bmic_pamp_on(en);
 	ruby_snddev_tx_pamp_on(en);
 }
@@ -273,10 +260,8 @@ void ruby_snddev_emic_pamp_on(int en)
 	pr_info("%s %d\n", __func__, en);
 
 	if (en) {
-		/* pull gpio high to do input mic selection */
 		gpio_set_value(PM8058_GPIO_PM_TO_SYS(RUBY_AUD_MIC_SEL), 1);
 	} else {
-		/* pull gpio down in default which input from back mic */
 		gpio_set_value(PM8058_GPIO_PM_TO_SYS(RUBY_AUD_MIC_SEL), 0);
 	}
 	ruby_snddev_tx_pamp_on(en);
@@ -433,12 +418,6 @@ int ruby_support_audience(void)
 	return 0;
 }
 
-int ruby_is_msm_i2s_slave(void)
-{
-	/* 1 - CPU slave, 0 - CPU master */
-	return 1;
-}
-
 static uint32_t msm_spi_gpio_on[] = {
 	GPIO_CFG(RUBY_SPI_DO,  1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
 	GPIO_CFG(RUBY_SPI_DI,  1, GPIO_CFG_INPUT, GPIO_CFG_NO_PULL, GPIO_CFG_8MA),
@@ -472,7 +451,6 @@ void ruby_spibus_enable(int en)
 
 void ruby_get_acoustic_tables(struct acoustic_tables *tb)
 {
-	/* clean name buffer */
 	memset(tb->aic3254, 0, PROPERTY_VALUE_MAX);
 	memset(tb->adie, 0, PROPERTY_VALUE_MAX);
 	memset(tb->spkamp, 0, PROPERTY_VALUE_MAX);
@@ -481,8 +459,6 @@ void ruby_get_acoustic_tables(struct acoustic_tables *tb)
 	memset(tb->tpa2026, 0, PROPERTY_VALUE_MAX);
 	memset(tb->tpa2028, 0, PROPERTY_VALUE_MAX);
 
-
-	/* HW version is after XD */
 	if (system_rev > 3)
 		strcpy(tb->aic3254, "AIC3254_REG_DualMic.csv");
 	else
@@ -509,7 +485,6 @@ static struct q6v2audio_analog_ops ops = {
 	.headset_enable	        = ruby_snddev_hsed_pamp_on,
 	.handset_enable	        = ruby_snddev_receiver_pamp_on,
 	.headset_speaker_enable	= ruby_snddev_hs_spk_pamp_on,
-	.bt_sco_enable	        = ruby_snddev_bt_sco_pamp_on,
 	.int_mic_enable         = ruby_snddev_imic_pamp_on,
 	.back_mic_enable        = ruby_snddev_bmic_pamp_on,
 	.ext_mic_enable         = ruby_snddev_emic_pamp_on,
@@ -517,16 +492,6 @@ static struct q6v2audio_analog_ops ops = {
 	.fm_headset_enable      = ruby_snddev_fmhs_pamp_on,
 	.fm_speaker_enable      = ruby_snddev_fmspk_pamp_on,
 	.usb_headset_enable     = ruby_usb_headset_on,
-};
-
-static struct q6v2audio_icodec_ops iops = {
-	.support_aic3254 = ruby_support_aic3254,
-	.support_adie = ruby_support_adie,
-	.is_msm_i2s_slave = ruby_is_msm_i2s_slave,
-};
-
-static struct q6v2audio_ecodec_ops eops = {
-	.bt_sco_enable  = ruby_snddev_bt_sco_pamp_on,
 };
 
 static struct aic3254_ctl_ops cops = {
@@ -562,28 +527,17 @@ static struct q6v2audio_aic3254_ops aops = {
 
 void __init ruby_audio_init(void)
 {
-	mutex_init(&bt_sco_lock);
 	mutex_init(&mic_lock);
 
-#ifdef CONFIG_MSM8X60_AUDIO_1X
 	pr_info("%s\n", __func__);
 	htc_8x60_register_analog_ops(&ops);
-	htc_8x60_register_ecodec_ops(&eops);
-	htc_8x60_register_icodec_ops(&iops);
 	acoustic_register_ops(&acoustic);
 	htc_8x60_register_aic3254_ops(&aops);
 	msm_set_voc_freq(8000, 8000);
-#endif
-
 	aic3254_register_ctl_ops(&cops);
-
-	/* Reset AIC3254 */
 	ruby_reset_3254();
-
-	/* Timpani Reset */
 	gpio_tlmm_config(msm_codec_reset_gpio[1], GPIO_CFG_ENABLE);
 	gpio_set_value(RUBY_AUD_QTR_RESET, 0);
 	mdelay(1);
 	gpio_set_value(RUBY_AUD_QTR_RESET, 1);
-
 }
