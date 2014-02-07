@@ -424,9 +424,9 @@ void __init shooter_pm8901_gpio_mpp_init(void)
 /* SAW regulator constraints */
 struct regulator_init_data msm_saw_regulator_pdata_s0 =
 	/*	      ID  vreg_name	       min_uV   max_uV */
-	SAW_VREG_INIT(PM8901_S0, "8901_s0",	       800000, 1325000);
+	SAW_VREG_INIT(PM8901_S0, "8901_s0",	       840000, 1250000);
 struct regulator_init_data msm_saw_regulator_pdata_s1 =
-	SAW_VREG_INIT(PM8901_S1, "8921_s1",	       800000, 1325000);
+	SAW_VREG_INIT(PM8901_S1, "8921_s1",	       840000, 1250000);
 
 /* RPM regulator constraints */
 static struct rpm_regulator_init_data rpm_regulator_init_data[] __devinitdata = {
