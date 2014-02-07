@@ -515,8 +515,16 @@ static struct pm8058_platform_data pm8058_platform_data = {
 #ifdef CONFIG_SENSORS_MSM_ADC
         .xoadc_pdata		= &pm8058_xoadc_pdata,
 #endif
+	.keypad_pdata		= NULL, /* No keypad pdata */
+	.charger_pdata		= NULL, /* No charger pdata */
 	.leds_pdata             = &pm8058_flash_leds_data,
 	.vibrator_pdata         = &pm8058_vib_pdata,
+
+	.regulator_pdatas	= NULL,
+	.num_regulators		= 0,
+
+	.xo_buffer_pdata	= NULL,
+	.num_xo_buffers		= 0,
 };
 
 static struct msm_ssbi_platform_data msm8x60_ssbi_pm8058_pdata __devinitdata = {

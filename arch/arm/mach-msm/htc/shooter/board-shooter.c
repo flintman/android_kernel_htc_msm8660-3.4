@@ -1749,7 +1749,7 @@ static struct htc_headset_8x60_platform_data htc_headset_8x60_data = {
 	.adc_amux	= PM_MPP_AIN_AMUX_CH5,
 	.adc_mic_bias	= {HS_DEF_MIC_ADC_15_BIT_MIN,
 			   HS_DEF_MIC_ADC_15_BIT_MAX},
-	.adc_remote	= {0, 1721, 1722, 2927, 2928, 6300},
+	.adc_remote	= {0, 722, 723, 2746, 2747, 6603},
 };
 
 static struct platform_device htc_headset_8x60 = {
@@ -1769,22 +1769,27 @@ static struct platform_device *headset_devices[] = {
 static struct headset_adc_config htc_headset_mgr_config[] = {
 	{
 		.type = HEADSET_MIC,
-		.adc_max = 29158,
-		.adc_min = 22766,
+		.adc_max = 28920,
+		.adc_min = 21705,
 	},
 	{
 		.type = HEADSET_BEATS,
-		.adc_max = 22765,
-		.adc_min = 16698,
+		.adc_max = 21704,
+		.adc_min = 14605,
 	},
 	{
 		.type = HEADSET_BEATS_SOLO,
-		.adc_max = 16697,
-		.adc_min = 7801,
+		.adc_max = 14604,
+		.adc_min = 8676,
+	},
+	{
+		.type = HEADSET_NO_MIC, /* HEADSET_INDICATOR */
+		.adc_max = 8675,
+		.adc_min = 5784,
 	},
 	{
 		.type = HEADSET_NO_MIC,
-		.adc_max = 7800,
+		.adc_max = 5783,
 		.adc_min = 0,
 	},
 };
@@ -1793,8 +1798,8 @@ static struct htc_headset_mgr_platform_data htc_headset_mgr_data = {
 	.driver_flag		= 0,
 	.headset_devices_num	= ARRAY_SIZE(headset_devices),
 	.headset_devices	= headset_devices,
-	.headset_config_num	= 0,
-	.headset_config		= 0,
+	.headset_config_num	= ARRAY_SIZE(htc_headset_mgr_config),
+	.headset_config		= htc_headset_mgr_config,
 };
 
 static struct platform_device htc_headset_mgr = {
