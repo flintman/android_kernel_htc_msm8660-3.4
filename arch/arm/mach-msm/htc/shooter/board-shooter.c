@@ -972,6 +972,19 @@ static struct tps65200_platform_data tps65200_data = {
 	.gpio_chg_int  = MSM_GPIO_TO_INT(SHOOTER_GPIO_CHG_INT),
 };
 
+#ifdef CONFIG_SUPPORT_DQ_BATTERY
+static int __init check_dq_setup(char *str)
+{
+	if (!strcmp(str, "PASS"))
+		tps65200_data.dq_result = 1;
+	else
+		tps65200_data.dq_result = 0;
+
+	return 1;
+}
+__setup("androidboot.dq=", check_dq_setup);
+#endif
+
 static struct i2c_board_info msm_tps_65200_boardinfo[] __initdata = {
 	{
 		I2C_BOARD_INFO("tps65200", 0xD4 >> 1),
@@ -2664,14 +2677,13 @@ static int isl29028_threoshold(int b, int c, int a, int x, int *thl_value, int *
 
 
 static struct isl29028_platform_data isl29028_pdata = {
-	.intr = PM8058_GPIO_PM_TO_SYS(SHOOTER_PLS_INT),
-	.levels = { 1, 3, 5, 15, 29, 339,
-			588, 728, 869, 4095},
-	.golden_adc = 450,
-	.power = isl29028_power,
-	.calibrate_func = isl29028_threoshold,
-	.lt = 0x15,
-	.ht = 0x16,
+		.intr = PM8058_GPIO_PM_TO_SYS(SHOOTER_PLS_INT),
+		.levels = {17, 79, 258, 588, 918, 1250, 1962, 2673, 3384, 4095},
+		.golden_adc = 0x4E2,
+		.power = isl29028_power,
+		.calibrate_func = isl29028_threoshold,
+		.lt = 0x15,
+		.ht = 0x16,
 };
 
 static struct i2c_board_info i2c_isl29028_devices[] = {
@@ -2688,14 +2700,13 @@ static int isl29029_power(int pwr_device, uint8_t enable)
 }
 
 static struct isl29029_platform_data isl29029_pdata = {
-	.intr = PM8058_GPIO_PM_TO_SYS(SHOOTER_PLS_INT),
-	.levels = { 1, 3, 5, 15, 29, 339,
-			588, 728, 869, 4095},
-	.golden_adc = 450,
-	.power = isl29029_power,
-	.calibrate_func = isl29028_threoshold,
-	.lt = 0x15,
-	.ht = 0x16,
+		.intr = PM8058_GPIO_PM_TO_SYS(SHOOTER_PLS_INT),
+		.levels = {17, 79, 258, 588, 918, 1250, 1962, 2673, 3384, 4095},
+		.golden_adc = 0x4E2,
+		.power = isl29029_power,
+		.calibrate_func = isl29028_threoshold,
+		.lt = 0x15,
+		.ht = 0x16,
 };
 
 static struct i2c_board_info i2c_isl29029_devices[] = {
