@@ -24,19 +24,18 @@
 #include <mach/gpio.h>
 #include <mach/dal.h>
 #include <linux/tpa2051d3.h>
-#include <mach/qdsp6v2_1x/snddev_icodec.h>
-#include <mach/qdsp6v2_1x/snddev_ecodec.h>
-#include <mach/qdsp6v2_1x/snddev_hdmi.h>
-#include <mach/qdsp6v2_1x/apr_audio.h>
-#include <mach/qdsp6v2_1x/q6asm.h>
+
+#include "qdsp6v2_1x/snddev_icodec.h"
+#include "qdsp6v2_1x/snddev_ecodec.h"
+#include "qdsp6v2_1x/snddev_hdmi.h"
+#include <mach/qdsp6v2_1x/audio_dev_ctl.h>
+#include <sound/apr_audio.h>
+#include <sound/q6asm.h>
 #include <mach/htc_acoustic_8x60.h>
+#include <mach/board_htc.h>
 
 #include "board-shooter-audio-data.h"
-#include <mach/qdsp6v2_1x/audio_dev_ctl.h>
 
-extern unsigned int system_rev;
-
-static struct mutex bt_sco_lock;
 static struct mutex mic_lock;
 static int curr_rx_mode;
 static atomic_t aic3254_ctl = ATOMIC_INIT(0);
@@ -136,11 +135,6 @@ void shooter_snddev_receiver_pamp_on(int en)
 		if (!atomic_read(&aic3254_ctl))
 			curr_rx_mode &= ~BIT_RECEIVER;
 	}
-}
-
-void shooter_snddev_bt_sco_pamp_on(int en)
-{
-	/* to be implemented */
 }
 
 /* power on/off externnal mic bias */
@@ -354,12 +348,6 @@ void shooter_enable_beats(int en)
 	set_beats_on(en);
 }
 
-int shooter_is_msm_i2s_slave(void)
-{
-	/* 1 - CPU slave, 0 - CPU master */
-	return 1;
-}
-
 void shooter_reset_3254(void)
 {
 	gpio_tlmm_config(msm_aic3254_reset_gpio[0], GPIO_CFG_ENABLE);
@@ -374,19 +362,18 @@ void shooter_set_q6_effect_mode(int mode)
 	atomic_set(&q6_effect_mode, mode);
 }
 
-int shooter_get_q6_effect_mode(void)
-{
-	int mode = atomic_read(&q6_effect_mode);
-	pr_info("%s: mode %d\n", __func__, mode);
-	return mode;
-}
+//int shooter_get_q6_effect_mode(void)
+//{
+//	int mode = atomic_read(&q6_effect_mode);
+//	pr_info("%s: mode %d\n", __func__, mode);
+//	return mode;
+//}
 
 static struct q6v2audio_analog_ops ops = {
 	.speaker_enable	        = shooter_snddev_poweramp_on,
 	.headset_enable	        = shooter_snddev_hsed_pamp_on,
 	.handset_enable	        = shooter_snddev_receiver_pamp_on,
 	.headset_speaker_enable	= shooter_snddev_hs_spk_pamp_on,
-	.bt_sco_enable	        = shooter_snddev_bt_sco_pamp_on,
 	.int_mic_enable         = shooter_snddev_imic_pamp_on,
 	.back_mic_enable        = shooter_snddev_bmic_pamp_on,
 	.ext_mic_enable         = shooter_snddev_emic_pamp_on,
@@ -394,15 +381,6 @@ static struct q6v2audio_analog_ops ops = {
 	.fm_headset_enable      = shooter_snddev_fmhs_pamp_on,
 	.fm_speaker_enable      = shooter_snddev_fmspk_pamp_on,
 	.voltage_on		= shooter_voltage_on,
-};
-
-static struct q6v2audio_icodec_ops iops = {
-	.support_aic3254 = shooter_support_aic3254,
-	.is_msm_i2s_slave = shooter_is_msm_i2s_slave,
-};
-
-static struct q6v2audio_ecodec_ops eops = {
-	.bt_sco_enable  = shooter_snddev_bt_sco_pamp_on,
 };
 
 static struct aic3254_ctl_ops cops = {
@@ -437,23 +415,20 @@ static struct q6v2audio_aic3254_ops aops = {
        .aic3254_set_mode = shooter_aic3254_set_mode,
 };
 
-static struct q6asm_ops qops = {
-	.get_q6_effect = shooter_get_q6_effect_mode,
-};
+//static struct q6asm_ops qops = {
+//	.get_q6_effect = shooter_get_q6_effect_mode,
+//};
 
 void __init shooter_audio_init(void)
 {
-	mutex_init(&bt_sco_lock);
 	mutex_init(&mic_lock);
 
 #ifdef CONFIG_MSM8X60_AUDIO_1X
 	pr_info("%s\n", __func__);
 	htc_8x60_register_analog_ops(&ops);
-	htc_8x60_register_icodec_ops(&iops);
-	htc_8x60_register_ecodec_ops(&eops);
 	acoustic_register_ops(&acoustic);
 	htc_8x60_register_aic3254_ops(&aops);
-	htc_8x60_register_q6asm_ops(&qops);
+	//htc_8x60_register_q6asm_ops(&qops);
 	msm_set_voc_freq(8000, 8000);
 #endif
 

@@ -1158,7 +1158,7 @@ static void __init msm8x60_init_dsps(void)
 
 #define MSM_PMEM_KERNEL_EBI1_SIZE  0x600000
 #define MSM_PMEM_ADSP_SIZE         0x4200000
-#define MSM_PMEM_AUDIO_SIZE        0x28B000
+#define MSM_PMEM_AUDIO_SIZE        0x4CF000
 
 #define MSM_SMI_BASE          0x38000000
 #define MSM_SMI_SIZE          0x4000000
@@ -1177,7 +1177,7 @@ static void __init msm8x60_init_dsps(void)
 #define MSM_ION_SF_SIZE		0x4000000 /* 64MB */
 #define MSM_ION_CAMERA_SIZE     MSM_PMEM_ADSP_SIZE
 #define MSM_ION_QSECOM_SIZE	0x600000 /* (6MB) */
-#define MSM_ION_AUDIO_SIZE	0x28B000
+#define MSM_ION_AUDIO_SIZE	MSM_PMEM_AUDIO_SIZE
 
 #ifdef CONFIG_MSM_CP
 #define MSM_ION_HOLE_SIZE	SZ_128K /* (128KB) */
@@ -1210,7 +1210,7 @@ static void __init msm8x60_init_dsps(void)
 #endif
 
 #ifdef CONFIG_MSM_MULTIMEDIA_USE_ION
-#define MSM_ION_HEAP_NUM	8
+#define MSM_ION_HEAP_NUM	9
 #define MSM_HDMI_PRIM_ION_SF_SIZE MSM_HDMI_PRIM_PMEM_SF_SIZE
 static unsigned msm_ion_sf_size = MSM_ION_SF_SIZE;
 #else
@@ -1224,14 +1224,6 @@ static int __init fb_size_setup(char *p)
 	return 0;
 }
 early_param("fb_size", fb_size_setup);
-
-static unsigned pmem_kernel_ebi1_size = MSM_PMEM_KERNEL_EBI1_SIZE;
-static int __init pmem_kernel_ebi1_size_setup(char *p)
-{
-	pmem_kernel_ebi1_size = memparse(p, NULL);
-	return 0;
-}
-early_param("pmem_kernel_ebi1_size", pmem_kernel_ebi1_size_setup);
 
 #ifdef CONFIG_ANDROID_PMEM
 static unsigned pmem_sf_size = MSM_PMEM_SF_SIZE;
@@ -1288,7 +1280,6 @@ static struct platform_device android_pmem_adsp_device = {
 	.id = 2,
 	.dev = { .platform_data = &android_pmem_adsp_pdata },
 };
-#endif
 static struct android_pmem_platform_data android_pmem_audio_pdata = {
 	.name = "pmem_audio",
 	.allocator_type = PMEM_ALLOCATORTYPE_BITMAP,
@@ -1302,6 +1293,7 @@ static struct platform_device android_pmem_audio_device = {
 	.dev = { .platform_data = &android_pmem_audio_pdata },
 };
 
+#endif
 #define PMEM_BUS_WIDTH(_bw) \
 	{ \
 		.vectors = &(struct msm_bus_vectors){ \
@@ -2119,7 +2111,6 @@ struct ion_platform_heap msm8x60_heaps [] = {
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *) &co_ion_pdata,
 		},
-#if 0
 		{
 			.id	= ION_AUDIO_HEAP_ID,
 			.type	= ION_HEAP_TYPE_CARVEOUT,
@@ -2128,7 +2119,6 @@ struct ion_platform_heap msm8x60_heaps [] = {
 			.memory_type = ION_EBI_TYPE,
 			.extra_data = (void *)&co_ion_pdata,
 		},
-#endif
 #endif
 };
 
@@ -2201,8 +2191,8 @@ static struct platform_device *shooter_devices[] __initdata = {
 	&android_pmem_device,
 	&android_pmem_adsp_device,
 	&android_pmem_smipool_device,
-#endif 
 	&android_pmem_audio_device,
+#endif 
 #endif 
 #ifdef CONFIG_MSM_ROTATOR
 	&msm_rotator_device,
@@ -2322,17 +2312,19 @@ static void __init size_pmem_devices(void)
 	android_pmem_adsp_pdata.size = pmem_adsp_size;
 	android_pmem_smipool_pdata.size = MSM_PMEM_SMIPOOL_SIZE;
 	android_pmem_pdata.size = pmem_sf_size;
-#endif /*CONFIG_MSM_MULTIMEDIA_USE_ION*/
 	android_pmem_audio_pdata.size = MSM_PMEM_AUDIO_SIZE;
+#endif /*CONFIG_MSM_MULTIMEDIA_USE_ION*/
 #endif /*CONFIG_ANDROID_PMEM*/
 }
 
 #ifdef CONFIG_ANDROID_PMEM
+#ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
 static void __init reserve_memory_for(struct android_pmem_platform_data *p)
 {
         msm8x60_reserve_table[p->memory_type].size += p->size;
 }
-#endif 
+#endif
+#endif
 
 static void __init reserve_pmem_memory(void)
 {
@@ -2340,9 +2332,8 @@ static void __init reserve_pmem_memory(void)
 #ifndef CONFIG_MSM_MULTIMEDIA_USE_ION
 	reserve_memory_for(&android_pmem_adsp_pdata);
 	reserve_memory_for(&android_pmem_pdata);
-#endif /*CONFIG_MSM_MULTIMEDIA_USE_ION*/
 	reserve_memory_for(&android_pmem_audio_pdata);
-	msm8x60_reserve_table[MEMTYPE_EBI1].size += pmem_kernel_ebi1_size;
+#endif /*CONFIG_MSM_MULTIMEDIA_USE_ION*/
 #endif /*CONFIG_ANDROID_PMEM*/
 }
 
@@ -2384,16 +2375,30 @@ static void __init shooter_reserve(void)
 #define EXT_CHG_VALID_MPP 10
 #define EXT_CHG_VALID_MPP_2 11
 
+#ifndef CONFIG_MSM8X60_AUDIO_1X
 #define PM_GPIO_CDC_RST_N 20
 #define GPIO_CDC_RST_N PM8058_GPIO_PM_TO_SYS(PM_GPIO_CDC_RST_N)
+#endif
 
 #if HASTIMPANI
+#ifdef CONFIG_MSM8X60_AUDIO_1X
+static struct regulator *snddev_vreg_l10;
+#endif
 static struct regulator *vreg_timpani_1;
 static struct regulator *vreg_timpani_2;
 
 static unsigned int msm_timpani_setup_power(void)
 {
-	int rc;
+	int rc = 0;
+
+    pr_info("%s() ++\n", __func__);
+#ifdef CONFIG_MSM8X60_AUDIO_1X
+	snddev_vreg_l10 = regulator_get(NULL, "8058_l10");
+	if (IS_ERR(snddev_vreg_l10)) {
+		pr_err("%s: Unable to get 8058_l10\n", __func__);
+		return -ENODEV;
+	}
+#endif
 
 	vreg_timpani_1 = regulator_get(NULL, "8058_l0");
 	if (IS_ERR(vreg_timpani_1)) {
@@ -2408,6 +2413,14 @@ static unsigned int msm_timpani_setup_power(void)
 		return -ENODEV;
 	}
 
+#ifdef CONFIG_MSM8X60_AUDIO_1X
+    rc = regulator_set_voltage(snddev_vreg_l10, 2600000, 2600000);
+	if (rc) {
+		pr_err("%s: unable to set L10 voltage to 2.85V\n", __func__);
+		goto fail;
+	}
+#endif
+
 	rc = regulator_set_voltage(vreg_timpani_1, 1200000, 1200000);
 	if (rc) {
 		pr_err("%s: unable to set L0 voltage to 1.2V\n", __func__);
@@ -2419,6 +2432,14 @@ static unsigned int msm_timpani_setup_power(void)
 		pr_err("%s: unable to set S3 voltage to 1.8V\n", __func__);
 		goto fail;
 	}
+
+#ifdef CONFIG_MSM8X60_AUDIO_1X
+	rc = regulator_enable(snddev_vreg_l10);
+	if (rc) {
+		pr_err("%s: Enable regulator 8058_l10 failed\n", __func__);
+		goto fail;
+	}
+#endif
 
 	rc = regulator_enable(vreg_timpani_1);
 	if (rc) {
@@ -2441,6 +2462,7 @@ static unsigned int msm_timpani_setup_power(void)
 		goto fail;
 	}
 
+#ifndef CONFIG_MSM8X60_AUDIO_1X
 	rc = gpio_request(GPIO_CDC_RST_N, "CDC_RST_N");
 	if (rc) {
 		pr_err("%s: GPIO Request %d failed\n", __func__,
@@ -2456,9 +2478,13 @@ static unsigned int msm_timpani_setup_power(void)
 		gpio_direction_output(GPIO_CDC_RST_N, 1);
 		gpio_free(GPIO_CDC_RST_N);
 	}
+#endif
 	return rc;
 
 fail:
+#ifdef CONFIG_MSM8X60_AUDIO_1X
+    regulator_put(snddev_vreg_l10);
+#endif
 	regulator_put(vreg_timpani_1);
 	regulator_put(vreg_timpani_2);
 	return rc;
@@ -2466,7 +2492,16 @@ fail:
 
 static void msm_timpani_shutdown_power(void)
 {
-	int rc;
+	int rc = 0;
+
+	pr_info("%s() ++\n", __func__);
+#ifdef CONFIG_MSM8X60_AUDIO_1X
+	rc = regulator_disable(snddev_vreg_l10);
+	if (rc)
+		pr_err("%s: Disable regulator 8058_l10 failed\n", __func__);
+
+	regulator_put(snddev_vreg_l10);
+#endif
 
 	rc = regulator_disable(vreg_timpani_1);
 	if (rc)
@@ -2479,6 +2514,7 @@ static void msm_timpani_shutdown_power(void)
 		pr_err("%s: Disable regulator 8058_s3 failed\n", __func__);
 
 	regulator_put(vreg_timpani_2);
+	pr_info("%s() --\n", __func__);
 }
 
 /* Power analog function of codec */
@@ -2487,6 +2523,7 @@ static int msm_timpani_codec_power(int vreg_on)
 {
 	int rc = 0;
 
+	pr_info("%s() --\n", __func__);
 	if (!vreg_timpani_cdc_apwr) {
 
 		vreg_timpani_cdc_apwr = regulator_get(NULL, "8058_s4");
@@ -2522,7 +2559,7 @@ static int msm_timpani_codec_power(int vreg_on)
 			goto vreg_fail;
 		}
 	}
-
+	pr_info("%s() --\n", __func__);
 	return 0;
 
 vreg_fail:
