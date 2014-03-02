@@ -2954,6 +2954,12 @@ static u32 msmsdcc_setup_pwr(struct msmsdcc_host *host, struct mmc_ios *ios)
 
 	switch (ios->power_mode) {
 	case MMC_POWER_OFF:
+#ifdef CONFIG_TIWLAN_POWER_CONTROL_FUNC
+		if (host->plat && host->plat->is_ti_wifi)) {
+			pr_info("ti_wifi_power:0, mmc->index=%d\n", mmc->index);
+			ti_wifi_power(0);
+		}
+#endif
 		pwr = MCI_PWR_OFF;
 		msmsdcc_cfg_mpm_sdiowakeup(host, SDC_DAT1_DISABLE);
 		/*
@@ -2974,6 +2980,12 @@ static u32 msmsdcc_setup_pwr(struct msmsdcc_host *host, struct mmc_ios *ios)
 		}
 		break;
 	case MMC_POWER_UP:
+#ifdef CONFIG_TIWLAN_POWER_CONTROL_FUNC
+		if (host->plat && host->plat->is_ti_wifi)) {
+			pr_info("ti_wifi_power:1, mmc->index=%d\n", mmc->index);
+			ti_wifi_power(1);
+		}
+#endif
 		/* writing PWR_UP bit is redundant */
 		pwr = MCI_PWR_UP;
 		msmsdcc_cfg_mpm_sdiowakeup(host, SDC_DAT1_ENABLE);
@@ -5941,6 +5953,14 @@ msmsdcc_probe(struct platform_device *pdev)
 	mmc->caps |= MMC_CAP_MMC_HIGHSPEED | MMC_CAP_SD_HIGHSPEED;
 	mmc->caps |= MMC_CAP_WAIT_WHILE_BUSY | MMC_CAP_ERASE;
 	mmc->caps |= MMC_CAP_HW_RESET;
+
+#ifdef CONFIG_TIWLAN_POWER_CONTROL_FUNC
+	if (host->plat && host->plat->is_ti_wifi) {
+		mmc->caps |= MMC_PM_KEEP_POWER;
+		mmc->caps |= MMC_CAP_NONREMOVABLE;
+		mmc->caps |= MMC_CAP_POWER_OFF_CARD;
+	}
+#endif
 	/*
 	 * If we send the CMD23 before multi block write/read command
 	 * then we need not to send CMD12 at the end of the transfer.
