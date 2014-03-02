@@ -33,36 +33,6 @@
 #include <linux/fb.h>
 #endif
 
-#ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
-#define MSM_FB_PRIM_BUF_SIZE (960 * 544 * 4 * 3) /* 4 bpp x 3 pages */
-#else
-#define MSM_FB_PRIM_BUF_SIZE (960 * 544 * 4 * 2) /* 4 bpp x 2 pages */
-#endif
-
-
-#ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
-#define MSM_FB_EXT_BUF_SIZE (1920 * 1088 * 2 * 1) /* 2 bpp x 1 page */
-#elif defined(CONFIG_FB_MSM_TVOUT)
-#define MSM_FB_EXT_BUF_SIZE (720 * 576 * 2 * 2) /* 2 bpp x 2 pages */
-#else
-#define MSM_FB_EXT_BUF_SIZE 0
-#endif
-
-/* Note: must be multiple of 4096 */
-#define MSM_FB_SIZE roundup(MSM_FB_PRIM_BUF_SIZE + MSM_FB_EXT_BUF_SIZE, 4096)
-
-#ifdef CONFIG_FB_MSM_OVERLAY0_WRITEBACK
-#define MSM_FB_OVERLAY0_WRITEBACK_SIZE roundup((960 * 544 * 3 * 2), 4096)
-#else
-#define MSM_FB_OVERLAY0_WRITEBACK_SIZE (0)
-#endif  /* CONFIG_FB_MSM_OVERLAY0_WRITEBACK */
-
-#ifdef CONFIG_FB_MSM_OVERLAY1_WRITEBACK
-#define MSM_FB_OVERLAY1_WRITEBACK_SIZE roundup((1920 * 1088 * 3 * 2), 4096)
-#else
-#define MSM_FB_OVERLAY1_WRITEBACK_SIZE (0)
-#endif  /* CONFIG_FB_MSM_OVERLAY1_WRITEBACK */
-
 static struct resource msm_fb_resources[] = {
 	{
 		.flags = IORESOURCE_DMA,
@@ -227,6 +197,17 @@ static struct resource hdmi_msm_resources[] = {
 	},
 };
 
+#ifdef CONFIG_FB_MSM_HDMI_MHL
+static mhl_driving_params ruby_driving_params[] = {
+	{.format = HDMI_VFRMT_640x480p60_4_3,	.reg_a3=0xEB, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_720x480p60_16_9,	.reg_a3=0xEB, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_1280x720p60_16_9,	.reg_a3=0xEB, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_720x576p50_16_9,	.reg_a3=0xEB, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_1920x1080p24_16_9, .reg_a3=0xEB, .reg_a6=0x0C},
+	{.format = HDMI_VFRMT_1920x1080p30_16_9, .reg_a3=0xEB, .reg_a6=0x0C},
+};
+#endif
+
 static int hdmi_core_power(int on, int show);
 static int hdmi_cec_power(int on);
 static int hdmi_gpio_config(int on);
@@ -237,8 +218,11 @@ static struct msm_hdmi_platform_data hdmi_msm_data = {
 	.enable_5v = hdmi_enable_5v,
 	.core_power = hdmi_core_power,
 	.cec_power = hdmi_cec_power,
-//	.panel_power = hdmi_panel_power,
 	.gpio_config = hdmi_gpio_config,
+#ifdef CONFIG_FB_MSM_HDMI_MHL
+	.driving_params =  ruby_driving_params,
+	.driving_params_count = ARRAY_SIZE(ruby_driving_params),
+#endif
 };
 
 static struct platform_device hdmi_msm_device = {

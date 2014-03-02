@@ -1758,7 +1758,7 @@ inline void mipi_dsi_set_backlight(struct msm_fb_data_type *mfd, int level)
 		led_pwm1[1] = 0;
 	}
 
-        mipi_ruby_send_cmd(novatek_cmd_backlight_cmds, ARRAY_SIZE(novatek_cmd_backlight_cmds), (level > 0));
+        mipi_ruby_send_cmd(novatek_cmd_backlight_cmds, ARRAY_SIZE(novatek_cmd_backlight_cmds), true);
 
 	bl_level_prevset = mfd->bl_level;
 }
