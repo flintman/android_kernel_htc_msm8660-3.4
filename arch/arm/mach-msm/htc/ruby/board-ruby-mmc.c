@@ -124,6 +124,7 @@ static struct mmc_platform_data ruby_wifi_data = {
 	.msmsdcc_fmid   = 24000000,
 	.msmsdcc_fmax   = 48000000,
 	.nonremovable	= 1,
+	.is_ti_wifi	= 1,
 };
 
 int ruby_wifi_set_carddetect(int val)
