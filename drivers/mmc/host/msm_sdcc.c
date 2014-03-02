@@ -2955,7 +2955,7 @@ static u32 msmsdcc_setup_pwr(struct msmsdcc_host *host, struct mmc_ios *ios)
 	switch (ios->power_mode) {
 	case MMC_POWER_OFF:
 #ifdef CONFIG_TIWLAN_POWER_CONTROL_FUNC
-		if (host->plat && host->plat->is_ti_wifi)) {
+		if (host->plat && host->plat->is_ti_wifi) {
 			pr_info("ti_wifi_power:0, mmc->index=%d\n", mmc->index);
 			ti_wifi_power(0);
 		}
@@ -2981,7 +2981,7 @@ static u32 msmsdcc_setup_pwr(struct msmsdcc_host *host, struct mmc_ios *ios)
 		break;
 	case MMC_POWER_UP:
 #ifdef CONFIG_TIWLAN_POWER_CONTROL_FUNC
-		if (host->plat && host->plat->is_ti_wifi)) {
+		if (host->plat && host->plat->is_ti_wifi) {
 			pr_info("ti_wifi_power:1, mmc->index=%d\n", mmc->index);
 			ti_wifi_power(1);
 		}
