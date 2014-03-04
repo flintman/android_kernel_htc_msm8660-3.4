@@ -136,6 +136,13 @@
 #define PYRAMID_CAM_CAM1_ID           (10)
 #define PYRAMID_CAM_I2C_SDA           (47)
 #define PYRAMID_CAM_I2C_SCL           (48)
+#define PYRAMID_CAM_MCLK     	 (32)
+#define PYRAMID_CAM_VCM_PD      (58)
+#define PYRAMID_CAM1_RSTz       (137)
+#define PYRAMID_CAM2_RSTz       (138)
+#define PYRAMID_CAM2_PWDN       (140)
+#define PYRAMID_MCLK_SWITCH     (141)
+
 
 /* General */
 #define PYRAMID_GENERAL_I2C_SDA		(59)
@@ -143,7 +150,7 @@
 
 /* Flashlight */
 #define PYRAMID_FLASH_EN             (29)
-#define PYRAMID_FLASH_TORCH             (30)
+#define PYRAMID_TORCH_EN             (30)
 
 /* Accessory */
 #define PYRAMID_GPIO_AUD_HP_DET        (31)
