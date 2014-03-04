@@ -717,7 +717,6 @@ static struct t_mhl_status_notifier mhl_status_notifier = {
 static ssize_t vbus_status_show(struct device *dev,
 	struct device_attribute *attr, char *buf)
 {
-	struct cable_detect_info *pInfo = &the_cable_info;
 	int level, vbus_in;
 #ifdef CONFIG_ARCH_MSM8X60
 	struct cable_detect_info *pInfo = &the_cable_info;
