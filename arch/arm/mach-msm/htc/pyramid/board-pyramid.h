@@ -143,7 +143,6 @@
 #define PYRAMID_CAM2_PWDN       (140)
 #define PYRAMID_MCLK_SWITCH     (141)
 
-
 /* General */
 #define PYRAMID_GENERAL_I2C_SDA		(59)
 #define PYRAMID_GENERAL_I2C_SCL		(60)
