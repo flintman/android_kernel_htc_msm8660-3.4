@@ -70,8 +70,8 @@
 #include <mach/msm_memtypes.h>
 #include <asm/mach/mmc.h>
 #include <mach/htc_battery_8x60.h>
-#ifdef CONFIG_TPS65200
-#include <linux/tps65200.h>
+#ifdef CONFIG_MFD_TPS65200
+#include <linux/mfd/tps65200.h>
 #endif
 #include <mach/msm_battery.h>
 #include <linux/usb/msm_hsusb.h>
@@ -891,7 +891,7 @@ static struct platform_device msm_gemini_device = {
 };
 #endif
 
-#ifdef CONFIG_TPS65200
+#ifdef CONFIG_MFD_TPS65200
 static struct tps65200_platform_data tps65200_data = {
 	.gpio_chg_stat = PM8058_GPIO_IRQ(PM8058_IRQ_BASE, RUBY_CHG_STAT),
 	.gpio_chg_int  = MSM_GPIO_TO_INT(RUBY_GPIO_CHG_INT),
@@ -2444,7 +2444,6 @@ static struct mpu3050_platform_data mpu3050_data = {
 					0, 1, 0,
 					0, 0, 1 },
 	},
-	.g_sensors_reset = g_sensors_reset,
 };
 
 static struct i2c_board_info __initdata mpu3050_GSBI12_boardinfo[] = {
@@ -2489,7 +2488,7 @@ static struct i2c_registry msm8x60_i2c_devices[] __initdata = {
 	},
 #endif
 #endif /* !CONFIG_MSM_SSBI */
-#ifdef CONFIG_TPS65200
+#ifdef CONFIG_MFD_TPS65200
 	{
 		I2C_SURF | I2C_FFA,
 		MSM_GSBI7_QUP_I2C_BUS_ID,
