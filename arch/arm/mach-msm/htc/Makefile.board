@@ -20,5 +20,8 @@ obj-$(CONFIG_MACH_M7_UL) += m7/
 # PYRAMID
 obj-$(CONFIG_MACH_PYRAMID) += pyramid/
 
+# SHOOTER
+obj-$(CONFIG_MACH_SHOOTER) += shooter/
+
 # RUBY
 obj-$(CONFIG_MACH_RUBY) += ruby/
