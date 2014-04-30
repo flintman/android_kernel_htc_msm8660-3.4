@@ -27,7 +27,7 @@ obj-$(CONFIG_IMX074) += imx074_v4l2.o
 obj-$(CONFIG_S5K3L1YX) += s5k3l1yx.o
 obj-$(CONFIG_OV2720) += ov2720.o
 obj-$(CONFIG_MT9M114) += mt9m114_v4l2.o
-obj-$(CONFIG_S5K4E1) += s5k4e1_v4l2.o
+obj-$(CONFIG_QS_S5K4E1) += qs_s5k4e1.o
 obj-$(CONFIG_MT9E013) += mt9e013_v4l2.o
 obj-$(CONFIG_WEBCAM_OV9726) += ov9726_v4l2.o
 obj-$(CONFIG_WEBCAM_OV7692_QRD) += ov7692_qrd_v4l2.o
@@ -37,3 +37,4 @@ obj-$(CONFIG_S5K6A2YA) += s5k6a2ya_v4l2.o
 obj-$(CONFIG_MT9V113) += mt9v113_v4l2.o mt9v113_reg_lens_9251.o
 obj-$(CONFIG_S5K6AAFX) += s5k6aafx_v4l2.o s5k6aafx_reg_valentewx.o
 
+obj-$(CONFIG_MACH_SHOOTER) += qs_s5k4e1_reg.o
