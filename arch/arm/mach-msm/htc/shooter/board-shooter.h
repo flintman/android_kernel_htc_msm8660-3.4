@@ -135,15 +135,20 @@
 #define SHOOTER_GPIO_MHL_USB_SWITCH        (99)
 
 /* Camera */
-#define SHOOTER_CAM_CAM1_ID           (10)
 #define SHOOTER_CAM_I2C_SDA           (47)
 #define SHOOTER_CAM_I2C_SCL           (48)
-#define SHOOTER_CAM_MCLK     	 (32)
-#define SHOOTER_CAM_VCM_PD      (58)
-#define SHOOTER_CAM1_RSTz       (137)
-#define SHOOTER_CAM2_RSTz       (138)
-#define SHOOTER_CAM2_PWDN       (140)
-#define SHOOTER_MCLK_SWITCH     (141)
+#define SHOOTER_S5K4E1_VCM_PD      (58)
+#define SHOOTER_SP3D_MCLK		(32)
+#define SHOOTER_WEBCAM_STB		(140)
+#define SHOOTER_WEBCAM_RST		(138)
+#define SHOOTER_CAM_SEL		   	(141)
+#define SHOOTER_S5K4E1_PD				(137)
+#define SHOOTER_S5K4E1_INTB				(102)
+#define SHOOTER_SP3D_GATE              (107)
+#define SHOOTER_SP3D_CORE_GATE         (58)
+#define SHOOTER_SP3D_SYS_RST           (102)
+#define SHOOTER_SP3D_PDX               (137)
+
 
 /* General */
 #define SHOOTER_GENERAL_I2C_SDA		(59)
@@ -161,6 +166,12 @@
 #define SHOOTER_SPI_DI                 (34)
 #define SHOOTER_SPI_CS                 (35)
 #define SHOOTER_SPI_CLK                (36)
+
+/* CAMERA SPI */
+#define SHOOTER_SP3D_SPI_DO                 (37)
+#define SHOOTER_SP3D_SPI_DI                 (38)
+#define SHOOTER_SP3D_SPI_CS                 (39)
+#define SHOOTER_SP3D_SPI_CLK                (40)
 
 /* PMIC */
 
@@ -186,7 +197,9 @@ extern struct rpm_regulator_platform_data shooter_rpm_regulator_pdata __devinitd
 extern struct platform_device msm8x60_8901_mpp_vreg __devinitdata;
 extern struct pm8901_vreg_pdata pm8901_regulator_pdata[];
 extern int pm8901_regulator_pdata_len;
+extern unsigned int engineerid;
 extern struct platform_device msm_adc_device;
+extern struct platform_device msm_camera_sensor_webcam;
 
 void __init shooter_init_mmc(void);
 int __init shooter_init_wifi_mmc(void);
@@ -195,6 +208,7 @@ int __init shooter_init_keypad(void);
 void __init shooter_init_fb(void);
 void __init shooter_init_pmic(void);
 int __init shooter_wifi_init(void);
+void __init msm8x60_init_cam(void);
 void __init shooter_gpio_mpp_init(void);
 void shooter_init_gpiomux(void);
 void __init msm8x60_allocate_fb_region(void);

@@ -133,7 +133,7 @@
 
 extern int ps_type;
 
-static unsigned int engineerid, mem_size_mb;
+static unsigned int mem_size_mb;
 
 /* Speed bin register. */
 #define QFPROM_SPEED_BIN_ADDR		(MSM_QFPROM_BASE + 0x00C0)
