@@ -24,6 +24,8 @@
 #include <mach/board.h>
 #ifdef CONFIG_MACH_TENDERLOIN
 #include <mach/camera-tenderloin.h>
+#elif CONFIG_MACH_SHOOTER
+#include <mach/camera-8x60.h>
 #else
 #include <mach/camera.h>
 #endif

@@ -138,12 +138,17 @@
 #define SHOOTER_CAM_CAM1_ID           (10)
 #define SHOOTER_CAM_I2C_SDA           (47)
 #define SHOOTER_CAM_I2C_SCL           (48)
-#define SHOOTER_CAM_MCLK     	 (32)
-#define SHOOTER_CAM_VCM_PD      (58)
-#define SHOOTER_CAM1_RSTz       (137)
-#define SHOOTER_CAM2_RSTz       (138)
-#define SHOOTER_CAM2_PWDN       (140)
-#define SHOOTER_MCLK_SWITCH     (141)
+#define SHOOTER_SP3D_MCLK		(32)
+#define SHOOTER_S5K4E1_INTB				(102)
+#define SHOOTER_S5K4E1_VCM_PD			(58)
+#define SHOOTER_S5K4E1_PD				(137)
+#define SHOOTER_WEBCAM_RST		(138)
+#define SHOOTER_WEBCAM_STB		(140)
+#define SHOOTER_CAM_SEL			(141)
+#define SHOOTER_SP3D_GATE              (107)
+#define SHOOTER_SP3D_CORE_GATE         (58)
+#define SHOOTER_SP3D_SYS_RST           (102)
+#define SHOOTER_SP3D_PDX               (137)
 
 /* General */
 #define SHOOTER_GENERAL_I2C_SDA		(59)
@@ -161,6 +166,12 @@
 #define SHOOTER_SPI_DI                 (34)
 #define SHOOTER_SPI_CS                 (35)
 #define SHOOTER_SPI_CLK                (36)
+
+/* CAMERA SPI */
+#define SHOOTER_SP3D_SPI_DO                 (37)
+#define SHOOTER_SP3D_SPI_DI                 (38)
+#define SHOOTER_SP3D_SPI_CS                 (39)
+#define SHOOTER_SP3D_SPI_CLK                (40)
 
 /* PMIC */
 
@@ -199,6 +210,7 @@ void __init shooter_gpio_mpp_init(void);
 void shooter_init_gpiomux(void);
 void __init msm8x60_allocate_fb_region(void);
 void __init shooter_pm8901_gpio_mpp_init(void);
+void __init msm8x60_init_cam(void);
 void msm8x60_mdp_writeback(struct memtype_reserve *reserve_table);
 #ifdef CONFIG_FB_MSM_HDMI_MSM_PANEL
 int hdmi_enable_5v(int on);

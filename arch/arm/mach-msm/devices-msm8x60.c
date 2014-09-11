@@ -106,6 +106,8 @@
 #define MSM_UART9DM_PHYS    (MSM_GSBI9_PHYS + 0x40000)
 #define INT_UART9DM_IRQ     GSBI9_UARTDM_IRQ
 
+struct platform_device msm_camera_sensor_webcam;
+
 #ifdef CONFIG_MACH_HTC
 struct flash_platform_data msm_nand_data = {
 	.parts		= NULL,

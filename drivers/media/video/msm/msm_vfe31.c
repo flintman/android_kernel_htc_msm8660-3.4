@@ -23,6 +23,8 @@
 #include <mach/irqs.h>
 #ifdef CONFIG_MACH_TENDERLOIN
 #include <mach/camera-tenderloin.h>
+#elif CONFIG_MACH_SHOOTER
+#include  <mach/camera-8x60.h>
 #else
 #include <mach/camera.h>
 #endif
@@ -45,7 +47,9 @@ atomic_t irq_cnt;
 static struct vfe31_ctrl_type *vfe31_ctrl;
 static struct msm_camera_io_clk camio_clk;
 static void  *vfe_syncdata;
+#ifndef CONFIG_MACH_SHOOTER
 void msm_empty_frame_q(void);
+#endif
 
 struct vfe31_isr_queue_cmd {
 	struct list_head list;
@@ -1762,7 +1766,9 @@ static int vfe31_proc_general(struct msm_vfe31_cmd *cmd)
 		pr_info("vfe31_proc_general: cmdID = %s\n",
 			vfe31_general_cmd[cmd->id]);
 		vfe31_stop();
+#ifndef CONFIG_MACH_SHOOTER
 		msm_empty_frame_q();
+#endif
 		break;
 
 	case V31_SYNC_TIMER_SETTING:

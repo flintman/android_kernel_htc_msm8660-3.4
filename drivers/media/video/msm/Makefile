@@ -11,12 +11,20 @@ ifeq ($(CONFIG_MSM_CAMERA_V4L2),y)
   obj-$(CONFIG_MSM_CAMERA) += rawchip/ yushanII/ io/ sensors/ actuators/ csi/
   obj-$(CONFIG_MSM_CAMERA) += msm_gesture.o
 else
+ifdef CONFIG_MACH_SHOOTER
+  obj-$(CONFIG_MSM_CAMERA) += msm_camera-8x60.o
+else
   obj-$(CONFIG_MSM_CAMERA) += msm_camera.o msm_v4l2.o
+endif
 endif
 ifdef CONFIG_MACH_TENDERLOIN
 obj-$(CONFIG_MSM_CAMERA) += msm_axi_qos.o
 else
+ifdef CONFIG_MACH_SHOOTER
+obj-$(CONFIG_MSM_CAMERA) += msm_axi_qos.o
+else
 obj-$(CONFIG_MSM_CAMERA) += msm_axi_qos.o gemini/ swfv/
+endif
 endif
 obj-$(CONFIG_MSM_CAMERA_FLASH) += flash.o
 obj-$(CONFIG_ARCH_MSM_ARM11) += msm_vfe7x.o msm_io7x.o
@@ -50,8 +58,8 @@ else
   obj-$(CONFIG_WEBCAM_OV9726) += ov9726.o ov9726_reg.o
   obj-$(CONFIG_OV5647) += ov5647.o ov5647_reg.o
   obj-$(CONFIG_S5K4E1) += s5k4e1.o s5k4e1_reg.o
-  obj-$(CONFIG_WEBCAM_OV7692) += ov7692.o
-  obj-$(CONFIG_WEBCAM_OV7692_QRD) += ov7692_qrd.o
+  #obj-$(CONFIG_WEBCAM_OV7692) += ov7692.o
+  #obj-$(CONFIG_WEBCAM_OV7692_QRD) += ov7692_qrd.o
 endif
 obj-$(CONFIG_VB6801) += vb6801.o
 obj-$(CONFIG_IMX072) += imx072.o imx072_reg.o

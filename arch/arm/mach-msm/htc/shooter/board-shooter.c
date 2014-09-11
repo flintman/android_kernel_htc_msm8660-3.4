@@ -2143,6 +2143,20 @@ static struct i2c_board_info __initdata mpu3050_GSBI10_boardinfo_XC[] = {
 	},
 };
 
+static struct i2c_board_info msm_camera_boardinfo[] __initdata = {
+	{
+		I2C_BOARD_INFO("s5k6aafx", 0x78 >> 1),
+	},
+	{
+		I2C_BOARD_INFO("s5k6aafx", 0x5a >> 1), /* COB type */
+	},
+	#ifdef CONFIG_QS_S5K4E1
+	{
+		I2C_BOARD_INFO("qs_s5k4e1", 0x20),
+	},
+	#endif
+};
+
 #ifdef CONFIG_I2C
 #define I2C_SURF 1
 #define I2C_FFA  (1 << 1)
@@ -2169,6 +2183,14 @@ static struct i2c_registry msm8x60_i2c_devices[] __initdata = {
 	},
 #endif
 #endif /*CONFIG_MSM_SSBI */
+#ifdef CONFIG_MSM_CAMERA
+    {
+		I2C_SURF | I2C_FFA,
+		MSM_GSBI4_QUP_I2C_BUS_ID,
+		msm_camera_boardinfo,
+		ARRAY_SIZE(msm_camera_boardinfo),
+	},
+#endif
 #ifdef CONFIG_MFD_TPS65200
 	{
 		I2C_SURF | I2C_FFA,
