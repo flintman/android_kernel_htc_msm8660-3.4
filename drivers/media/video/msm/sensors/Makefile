@@ -4,6 +4,7 @@ EXTRA_CFLAGS += -Idrivers/media/video/msm/io
 EXTRA_CFLAGS += -Idrivers/media/video/msm/csi
 EXTRA_CFLAGS += -Idrivers/media/video/msm/yushanII
 obj-$(CONFIG_MSM_CAMERA_SENSOR) += msm_sensor.o
+obj-$(CONFIG_SP3D) += sp3d.o
 obj-$(CONFIG_OV5647) += ov5647_v4l2.o
 obj-$(CONFIG_IMX091) += imx091_v4l2.o
 obj-$(CONFIG_IMX105) += imx105_v4l2.o
@@ -37,3 +38,5 @@ obj-$(CONFIG_S5K6A2YA) += s5k6a2ya_v4l2.o
 obj-$(CONFIG_MT9V113) += mt9v113_v4l2.o mt9v113_reg_lens_9251.o
 obj-$(CONFIG_S5K6AAFX) += s5k6aafx_v4l2.o s5k6aafx_reg_valentewx.o
 obj-$(CONFIG_WEBCAM_MT9M113) += mt9m113.o mt9m113_reg.o
+
+obj-$(CONFIG_MACH_SHOOTER) += sp3d_reg_3d.o sp3d_reg_2d.o sp3d_reg_com.o sp3d_reg_cal.o s5k6aafx_reg_shooter.o qs_s5k4e1_reg.o s5k6aafx_reg_shooter_cob.o

@@ -137,7 +137,7 @@ static struct regulator *shooter_reg_8058_l15 = NULL;
 static int camera_sensor_power_enable(char *power, unsigned volt, struct regulator **sensor_power)
 {
 	int rc;
-
+	pr_err("[CAM] %s:%d\n", __func__, __LINE__);
 	if (power == NULL)
 		return -ENODEV;
 
@@ -194,7 +194,7 @@ static int camera_sensor_power_enable_8901(char *power, struct regulator **senso
 static int camera_sensor_power_disable(struct regulator *sensor_power)
 {
 	int rc;
-
+	pr_err("[CAM] %s:%d\n", __func__, __LINE__);
 	if (sensor_power == NULL)
 		return -ENODEV;
 
@@ -216,6 +216,7 @@ static int camera_sensor_power_disable(struct regulator *sensor_power)
 
 static void shooter_set_gpio(int gpio, int state)
 {
+	pr_err("[CAM] %s:%d\n", __func__, __LINE__);
 	gpio_set_value(gpio, state);
 }
 
@@ -441,6 +442,7 @@ static void Shooter_seccam_clk_switch(void)
 
 static int shooter_config_camera_on_gpios(void)
 {
+	pr_err("[CAM] %s:%d\n", __func__, __LINE__);
 	if (engineerid == 7) {
 		config_gpio_table(camera_on_gpio_table_liteon,
 			ARRAY_SIZE(camera_on_gpio_table_liteon));
@@ -454,6 +456,7 @@ static int shooter_config_camera_on_gpios(void)
 
 static void shooter_config_camera_off_gpios(void)
 {
+	pr_err("[CAM] %s:%d\n", __func__, __LINE__);
 	if (engineerid == 7) {
 		config_gpio_table(camera_off_gpio_table_liteon,
 			ARRAY_SIZE(camera_off_gpio_table_liteon));
@@ -501,7 +504,6 @@ struct resource msm_camera_resources[] = {
 	},
 };
 
-/*
 static struct spi_board_info sp3d_spi_board_info[] __initdata = {
 	{
 		.modalias	= "sp3d_spi",
@@ -510,7 +512,7 @@ static struct spi_board_info sp3d_spi_board_info[] __initdata = {
 		.chip_select	= 0,
 		.max_speed_hz	= 15060000,
 	}
-};*/
+};
 
 static int flashlight_control(int mode)
 {
@@ -648,12 +650,12 @@ static struct platform_device msm_gemini_device = {
 
 void __init msm8x60_init_cam(void)
 {
-
+	pr_err("[CAM] %s:%d\n", __func__, __LINE__);
 	msm_camera_sensor_webcam.name = "msm_camera_webcam";
 	msm_camera_sensor_webcam.dev.platform_data = &msm_camera_sensor_s5k6aafx_data;
 #if 1 //FLINTMANdef CONFIG_SP3D
-//spi_register_board_info(sp3d_spi_board_info,
-//		ARRAY_SIZE(sp3d_spi_board_info));
+spi_register_board_info(sp3d_spi_board_info,
+		ARRAY_SIZE(sp3d_spi_board_info));
 #endif
 
 #if 1//FLINTMANdef CONFIG_SP3D

@@ -501,4 +501,11 @@ config OV4688
 	default n
 	---help---
 	ov 4MP Bayer Sensor
+	
+config SP3D
+	bool "Sensor SP3D (Sharp 3D module)"
+	depends on MSM_CAMERA && ARCH_MSM8X60
+	default n
+	---help---
+	  SHARP 3D Module
 
