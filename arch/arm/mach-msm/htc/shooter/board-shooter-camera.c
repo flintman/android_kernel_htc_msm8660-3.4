@@ -653,12 +653,12 @@ void __init msm8x60_init_cam(void)
 	pr_err("[CAM] %s:%d\n", __func__, __LINE__);
 	msm_camera_sensor_webcam.name = "msm_camera_webcam";
 	msm_camera_sensor_webcam.dev.platform_data = &msm_camera_sensor_s5k6aafx_data;
-#if 1 //FLINTMANdef CONFIG_SP3D
+#ifdef CONFIG_SP3D
 spi_register_board_info(sp3d_spi_board_info,
 		ARRAY_SIZE(sp3d_spi_board_info));
 #endif
 
-#if 1//FLINTMANdef CONFIG_SP3D
+#ifdef CONFIG_SP3D
 	platform_device_register(&msm_camera_sensor_sp3d);
 #endif
 #ifdef CONFIG_QS_S5K4E1

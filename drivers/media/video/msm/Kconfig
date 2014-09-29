@@ -23,6 +23,13 @@ config HTC_CAMERA_HAL_VERSION
 	  MONARUDO should use version 2
 	  M7 should use version 3
 
+config CAMERA_3D
+       bool "Qualcomm MSM 3D support"
+       depends on MSM_CAMERA && ARCH_MSM8X60
+       default n
+       ---help---
+         Enable support for 3D
+
 comment "Camera Sensor Selection"
 config MT9T013
 	bool "Sensor mt9t013 (BAYER 3M)"

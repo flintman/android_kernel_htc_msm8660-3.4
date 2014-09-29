@@ -12,7 +12,7 @@ ifeq ($(CONFIG_MSM_CAMERA_V4L2),y)
   obj-$(CONFIG_MSM_CAMERA) += msm_gesture.o
 else
 ifdef CONFIG_MACH_SHOOTER
-  obj-$(CONFIG_MSM_CAMERA) += msm_camera-8x60.o
+  obj-$(CONFIG_MSM_CAMERA) += msm_camera-8x60.o msm_camera_liteon.o
 else
   obj-$(CONFIG_MSM_CAMERA) += msm_camera.o msm_v4l2.o
 endif
@@ -21,7 +21,7 @@ ifdef CONFIG_MACH_TENDERLOIN
 obj-$(CONFIG_MSM_CAMERA) += msm_axi_qos.o
 else
 ifdef CONFIG_MACH_SHOOTER
-obj-$(CONFIG_MSM_CAMERA) += msm_axi_qos.o
+obj-$(CONFIG_MSM_CAMERA) += msm_axi_qos.o gemini_8x60/
 else
 obj-$(CONFIG_MSM_CAMERA) += msm_axi_qos.o gemini/ swfv/
 endif
@@ -38,7 +38,12 @@ obj-$(CONFIG_ARCH_QSD8X50) += msm_vfe8x.o msm_vfe8x_proc.o msm_io8x.o
 ifeq ($(CONFIG_MSM_CAMERA_V4L2),y)
   obj-$(CONFIG_ARCH_MSM8X60) += msm_io_8x60_v4l2.o msm_vfe31_v4l2.o msm_vpe.o
 else
-obj-$(CONFIG_ARCH_MSM8X60) += msm_vfe31.o msm_io_8x60.o msm_vpe1.o
+	ifdef CONFIG_CAMERA_3D
+		obj-$(CONFIG_ARCH_MSM8X60) += msm_io_8x60.o msm_vfe_8x60.o msm_vpe1_8x60.o
+		obj-$(CONFIG_ARCH_MSM8X60) += msm_vpe1_liteon.o
+	else
+		obj-$(CONFIG_ARCH_MSM8X60) += msm_vfe31.o msm_io_8x60.o msm_vpe1.o
+	endif
 endif
 obj-$(CONFIG_ARCH_MSM8960) += msm_io_8960.o msm_vfe32.o msm_vpe.o
 obj-$(CONFIG_MT9T013) += mt9t013.o mt9t013_reg.o
